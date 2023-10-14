@@ -68,19 +68,20 @@ float runTestNoEigen(unsigned int size) {
 int main(int argc, char** argv) {
 
     if (argc < 4) {
-        std::cout << "Arguments : size_min, size_max, N, M " << std::endl;
+        cout << "Arguments : size_min, size_max, N, M " << endl;
         exit(1);
     }
 
-    std::vector<float> eigen_times;
-    std::vector<float> noeigen_times;
-    int size_min = std::stoi(argv[1]);
-    int size_max = std::stoi(argv[2]);
-    int N = std::stoi(argv[3]);
-    int M = std::stoi(argv[4]);
+    vector<float> eigen_times;
+    vector<float> noeigen_times;
+    int size_min = stoi(argv[1]);
+    int size_max = stoi(argv[2]);
+    int N = stoi(argv[3]);
+    int M = stoi(argv[4]);
     
 
     for ( int r = 0; r < N; r++) {
+        cout << "Iteration nº "<< r << endl; 
         float t = (float)r / (float)(N - 1);
         unsigned int size = size_min * (1 - t) + size_max * t;
         float total_eigen = 0.0;

@@ -1,5 +1,308 @@
-Ej 2: Como infuye la inicializacion de las matrices 
+Ej 1: tiempo con clock
+
+Eigen:
+--------------
+
+N = 250
+Eigen time (clock()): 0.003832
+./bin/benchmark1_eigen 250  0.00s user 0.01s system 97% cpu 0.009 total
+
+N = 500
+Eigen time (clock()): 0.030756
+./bin/benchmark1_eigen 500  0.03s user 0.02s system 99% cpu 0.045 total
+
+N = 750
+Eigen time (clock()): 0.116749
+./bin/benchmark1_eigen 750  0.11s user 0.01s system 99% cpu 0.120 total
+
 N = 1000
-Tiempo inicializar:1697036800.000000 | 1697036800.000000 = 0s
-Tiempo eigen:1697036800.000000 | 1697036800.000000 = 0s
-Tiempo noEigen:1697036800.000000 | 1697036928.000000 = 128s
+
+Eigen time (clock()): 0.213331
+./bin/benchmark1_eigen 1000  0.25s user 0.03s system 99% cpu 0.282 total
+
+No eigen:
+------------
+N = 250
+Time (clock()): 0.029126
+./bin/benchmark1_noeigen 250  0.03s user 0.00s system 99% cpu 0.031 total
+
+N = 500
+Time (clock()): 0.228963
+./bin/benchmark1_noeigen 500  0.23s user 0.00s system 99% cpu 0.231 total
+
+N = 750
+Time (clock()): 0.762957
+./bin/benchmark1_noeigen 750  0.75s user 0.02s system 99% cpu 0.765 total
+
+N = 1000
+Time (clock()): 1.82374
+./bin/benchmark1_noeigen 1000  1.82s user 0.01s system 99% cpu 1.826 total
+
+
+Ej 2: Como influye la inicializacion de las matrices 
+
+Eigen:
+----------------
+
+N = 250
+Initialization time:0.002991s
+Eigen time:0.003789s
+Fraction of initialization time: 0.441170
+./bin/ej2_eigen 250  0.01s user 0.00s system 98% cpu 0.009 total
+
+N = 500
+Initialization time:0.011901s
+Eigen time:0.030427s
+Fraction of initialization time: 0.281160
+./bin/ej2_eigen 500  0.04s user 0.00s system 99% cpu 0.045 total
+
+N = 750
+Initialization time:0.029327s
+Eigen time:0.099225s
+Fraction of initialization time: 0.228133
+./bin/ej2_eigen 750  0.13s user 0.00s system 99% cpu 0.131 total
+
+N = 1000
+Initialization time:0.047499s
+Eigen time:0.218696s
+Fraction of initialization time: 0.178437
+./bin/ej2_eigen 1000  0.26s user 0.01s system 99% cpu 0.269 total
+
+N = 2000
+Initialization time:0.184006s
+Eigen time:1.663899s
+Fraction of initialization time: 0.092
+./bin/ej2_eigen 2000  1.84s user 0.01s system 99% cpu 1.851 total
+
+No Eigen:
+----------------
+
+N = 250
+Initialization time:0.002940s
+No Eigen time:0.026849s
+Fraction of initialization time: 0.098692
+./bin/ej2_noeigen 250  0.03s user 0.00s system 99% cpu 0.032 total
+
+N = 500
+Initialization time:0.012272s
+No Eigen time:0.212327s
+Fraction of initialization time: 0.054639
+./bin/ej2_noeigen 500  0.23s user 0.00s system 99% cpu 0.227 total
+
+N = 750
+Initialization time:0.027341s
+No Eigen time:0.759174s
+Fraction of initialization time: 0.034762
+./bin/ej2_noeigen 750  0.77s user 0.02s system 99% cpu 0.789 total
+
+N = 1000
+Initialization time:0.048661s
+No Eigen time:1.778137s
+Fraction of initialization time: 0.026637
+./bin/ej2_noeigen 1000  1.83s user 0.00s system 99% cpu 1.829 total
+
+N = 2000
+Tiempo inicializar:0.189560s
+Tiempo noEigen:14.089845s
+./bin/ej2_noeigen 2000  14.23s user 0.05s system 99% cpu 14.282 total
+
+El tiempo total que devuelve `time` es aproximadamente el tiempo que tarda en inicializar y hacer la multiplicación
+
+N = 250
+Initialization time:0.003101s
+No Eigen time:0.026967s
+./bin/ej2_noeigen 250  0.03s user 0.00s system 99% cpu 0.033 total
+
+N = 500
+Initialization time:0.012069s
+No Eigen time:0.212237s
+./bin/ej2_noeigen 500  0.22s user 0.01s system 99% cpu 0.227 total
+
+N = 750
+Initialization time:0.027497s
+No Eigen time:0.717906s
+./bin/ej2_noeigen 750  0.74s user 0.01s system 99% cpu 0.748 total
+
+Ej3: Syscalls:
+
+Eigen gettimeofday
+
+% time     seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ----------------
+ 24.68    0.000190          31         6           mprotect
+ 20.91    0.000161           5        27           mmap
+  9.48    0.000073          36         2           write
+  8.70    0.000067          11         6           munmap
+  7.92    0.000061          20         3           brk
+  4.42    0.000034          34         1           futex
+  4.42    0.000034           5         6           newfstatat
+  4.03    0.000031          31         1           getrandom
+  3.38    0.000026          26         1           prlimit64
+  3.12    0.000024          12         2         1 arch_prctl
+  2.99    0.000023          23         1           set_tid_address
+  2.99    0.000023          23         1           set_robust_list
+  2.99    0.000023          23         1           rseq
+  0.00    0.000000           0         4           read
+  0.00    0.000000           0         5           close
+  0.00    0.000000           0         4           pread64
+  0.00    0.000000           0         1         1 access
+  0.00    0.000000           0         1           execve
+  0.00    0.000000           0         5           openat
+------ ----------- ----------- --------- --------- ----------------
+100.00    0.000770           9        78         2 total
+
+
+
+No Eigen gettimeofday
+
+% time     seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ----------------
+ 29.15    0.000671          24        27           mmap
+ 14.68    0.000338         338         1           getrandom
+ 14.03    0.000323          53         6           mprotect
+  6.08    0.000140          23         6           munmap
+  5.26    0.000121          20         6           newfstatat
+  4.56    0.000105          26         4           read
+  4.56    0.000105          26         4           pread64
+  4.34    0.000100          20         5           close
+  3.13    0.000072          14         5           openat
+  3.04    0.000070          35         2           write
+  2.82    0.000065          21         3           brk
+  1.91    0.000044          44         1           futex
+  1.43    0.000033          33         1           set_robust_list
+  1.39    0.000032          32         1           rseq
+  1.26    0.000029          14         2         1 arch_prctl
+  1.22    0.000028          28         1           set_tid_address
+  1.13    0.000026          26         1           prlimit64
+  0.00    0.000000           0         1         1 access
+  0.00    0.000000           0         1           execve
+------ ----------- ----------- --------- --------- ----------------
+100.00    0.002302          29        78         2 total
+
+Eigen clock
+
+% time     seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ----------------
+ 44.14    0.000862          31        27           mmap
+ 10.80    0.000211          35         6           mprotect
+  6.14    0.000120          24         5           close
+  5.84    0.000114          28         4           pread64
+  5.79    0.000113          22         5           openat
+  4.92    0.000096          16         6           newfstatat
+  4.71    0.000092          23         4           read
+  3.58    0.000070          23         3           brk
+  3.53    0.000069          11         6           munmap
+  1.84    0.000036          36         1           getrandom
+  1.59    0.000031          31         1           futex
+  1.38    0.000027          27         1           prlimit64
+  1.33    0.000026          13         2         1 arch_prctl
+  1.33    0.000026          26         1           set_tid_address
+  1.33    0.000026          26         1           set_robust_list
+  1.33    0.000026          26         1           rseq
+  0.36    0.000007           3         2           clock_gettime
+  0.05    0.000001           1         1           write
+  0.00    0.000000           0         1         1 access
+  0.00    0.000000           0         1           execve
+------ ----------- ----------- --------- --------- ----------------
+100.00    0.001953          24        79         2 total
+
+No Eigen Clock
+
+% time     seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ----------------
+ 38.37    0.000531          19        27           mmap
+ 14.52    0.000201          33         6           mprotect
+  7.59    0.000105          26         4           pread64
+  5.71    0.000079          15         5           close
+  4.48    0.000062          12         5           openat
+  4.05    0.000056          18         3           brk
+  3.97    0.000055          13         4           read
+  3.90    0.000054           9         6           newfstatat
+  3.61    0.000050           8         6           munmap
+  1.95    0.000027          27         1           getrandom
+  1.88    0.000026          13         2         1 arch_prctl
+  1.88    0.000026          26         1           futex
+  1.88    0.000026          26         1           set_tid_address
+  1.88    0.000026          26         1           set_robust_list
+  1.81    0.000025          25         1           prlimit64
+  1.81    0.000025          25         1           rseq
+  0.65    0.000009           4         2           clock_gettime
+  0.07    0.000001           1         1           write
+  0.00    0.000000           0         1         1 access
+  0.00    0.000000           0         1           execve
+------ ----------- ----------- --------- --------- ----------------
+100.00    0.001384          17        79         2 total
+
+La principal diferencia se encuentra en que al usar clock utiliza una syscall `clock_gettime` mientras que si se usa gettimeofday no hace syscall adicionales
+
+
+Ej4:
+
+eigen clock:
+-----------------
+
+Performance counter stats for './bin/benchmark3_eigenClock 2000' (3 runs):
+
+           1840.38 msec task-clock:u              #    1.002 CPUs utilized            ( +-  0.49% )
+                 0      context-switches:u        #    0.000 /sec                   
+                 0      cpu-migrations:u          #    0.000 /sec                   
+              2210      page-faults:u             #    1.203 K/sec                    ( +-  7.75% )
+        4666113583      cycles:u                  #    2.540 GHz                      ( +-  0.44% )
+       13818855650      instructions:u            #    2.99  insn per cycle           ( +-  0.00% )
+         205152314      branches:u                #  111.696 M/sec                    ( +-  0.00% )
+            314612      branch-misses:u           #    0.15% of all branches          ( +-  0.26% )
+
+           1.83739 +- 0.00897 seconds time elapsed  ( +-  0.49% )
+
+eigen gettimeofday:
+-------------------
+
+Performance counter stats for './bin/benchmark3_eigenGTOD 2000' (3 runs):
+
+           1826.98 msec task-clock:u              #    0.997 CPUs utilized            ( +-  0.26% )
+                 0      context-switches:u        #    0.000 /sec                   
+                 0      cpu-migrations:u          #    0.000 /sec                   
+              2216      page-faults:u             #    1.210 K/sec                    ( +-  7.70% )
+        4631375738      cycles:u                  #    2.530 GHz                      ( +-  0.24% )
+       13818860835      instructions:u            #    3.00  insn per cycle           ( +-  0.00% )
+         205153122      branches:u                #  112.048 M/sec                    ( +-  0.00% )
+           1324801      branch-misses:u           #    0.65% of all branches          ( +-  0.09% )
+
+           1.83158 +- 0.00467 seconds time elapsed  ( +-  0.26% )
+
+no eigen clock:
+--------------------
+
+
+ Performance counter stats for './bin/benchmark3_noEigenClock 2000' (3 runs):
+
+          14418.75 msec task-clock:u              #    0.995 CPUs utilized            ( +-  0.35% )
+                 0      context-switches:u        #    0.000 /sec                   
+                 0      cpu-migrations:u          #    0.000 /sec                   
+              2913      page-faults:u             #  201.032 /sec                     ( +-  5.79% )
+       36539903847      cycles:u                  #    2.522 GHz                      ( +-  0.39% )
+      112667437405      instructions:u            #    3.07  insn per cycle           ( +-  0.00% )
+       32159856691      branches:u                #    2.219 G/sec                    ( +-  0.00% )
+           4300544      branch-misses:u           #    0.01% of all branches          ( +-  0.04% )
+
+           14.4912 +- 0.0510 seconds time elapsed  ( +-  0.35% )
+
+noeigen gettimeofday:
+--------------------
+
+Performance counter stats for './bin/benchmark3_noEigenGTOD 2000' (3 runs):
+
+          14708.40 msec task-clock:u              #    1.009 CPUs utilized            ( +-  0.56% )
+                 0      context-switches:u        #    0.000 /sec                   
+                 0      cpu-migrations:u          #    0.000 /sec                   
+              2917      page-faults:u             #  200.188 /sec                     ( +-  5.86% )
+       37195764118      cycles:u                  #    2.553 GHz                      ( +-  0.39% )
+      112667442899      instructions:u            #    3.05  insn per cycle           ( +-  0.00% )
+       32159857584      branches:u                #    2.207 G/sec                    ( +-  0.00% )
+           4304824      branch-misses:u           #    0.01% of all branches          ( +-  0.01% )
+
+           14.5723 +- 0.0817 seconds time elapsed  ( +-  0.56% )
+
+gettimeofday provoca mas branch misses que clock.
+Comprobando la diferencia entre Eigen y nuestra matmul se observa que la relacion entre el numero de instrucciones y ciclos de Eigen es
+8 veces menos que nuestra matmul. Debido a las instrucciones vectorizadas que realizaban 8 operaciones por instruccion.
