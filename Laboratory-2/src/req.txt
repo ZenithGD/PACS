@@ -1,0 +1,16 @@
+Run n times those experiments involving time to mitigate the effect of spurious results. 
+Report number of runs, mean values, standard deviation, and justify high standard deviation numbers (if any).
+
+Exercise 1: Are there any differences between time (user and real) and clock()? Justify such differences.
+
+Exercise 2: What is the relative overhead of the initialization code section with respect to the entire execution as the problem size increases? 
+Is it possible to relate somehow the system, user, and real times with the results given by gettimeofday()?
+
+Exercise 3: Choose at least 4 different system calls from the strace outputs showing differences in the number of calls (could be even 0 calls) 
+between different runs (i.e., Eigen + clock vs.
+Eigen + gettimeofday, standard matmult + gettimeofday vs. Eigen + gettimeofday, etcetera) and reason about the differences. 
+There is no need to dump in the report the entire outputs from strace, but just for the chosen system calls.
+
+Exercise 4: Choose at least 4 different metrics/stats from the perf outputs showing differences between different runs 
+(i.e., Eigen + clock vs. Eigen + gettimeofday, standard matmult + gettimeofday vs. Eigen + gettimeofday, etcetera) and reason about the differences. 
+There is no need to dump in the report the entire outputs from perf, but just for the chosen metrics.

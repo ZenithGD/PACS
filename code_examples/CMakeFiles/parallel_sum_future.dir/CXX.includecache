@@ -1,0 +1,20 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/mnt/e/Universidad/Master/PACS/PACS/code_examples/parallel_sum_future.cc
+future
+-
+iostream
+-
+iterator
+-
+random
+-
+vector
+-
+

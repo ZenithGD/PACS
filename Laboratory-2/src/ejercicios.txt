@@ -1,0 +1,8 @@
+Ej 2: Como infuye la inicializacion de las matrices 
+N = 1000
+Tiempo inicializar:1697036800.000000 | 1697036800.000000 = 0s
+Tiempo eigen:1697036800.000000 | 1697036800.000000 = 0s
+Tiempo noEigen:1697036800.000000 | 1697036928.000000 = 128s
+
+N = 5000: 0
+N = 10000: 0

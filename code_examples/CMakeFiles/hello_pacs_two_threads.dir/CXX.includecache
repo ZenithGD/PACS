@@ -1,0 +1,16 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/mnt/e/Universidad/Master/PACS/PACS/code_examples/hello_pacs_two_threads.cc
+chrono
+-
+iostream
+-
+thread
+-
+

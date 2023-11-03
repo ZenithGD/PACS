@@ -1,0 +1,26 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/mnt/e/Universidad/Master/PACS/PACS/Laboratory-3/pi_taylor_parallel_kahan.cc
+iomanip
+-
+iostream
+-
+limits
+-
+numeric
+-
+string
+-
+thread
+-
+utility
+-
+vector
+-
+
