@@ -1,5 +1,13 @@
 {
     "files.associations": {
+        "*.sql": "sql",
+        "*.css": "css",
+        ".env": "shellscript",
+        "*.pcode": "xml",
+        "*.jj": "java",
+        "*.uss": "css",
+        "*.uxml": "xml",
+        "*.physicsMaterial2D": "yaml",
         "iostream": "cpp",
         "array": "cpp",
         "atomic": "cpp",
@@ -64,6 +72,7 @@
         "concepts": "cpp",
         "numbers": "cpp",
         "semaphore": "cpp",
-        "stop_token": "cpp"
+        "stop_token": "cpp",
+        "deque": "cpp"
     }
 }

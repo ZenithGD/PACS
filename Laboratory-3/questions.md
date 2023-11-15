@@ -13,6 +13,7 @@ Transforms a `string` to a `long long` variable
 It does scale linearly because every step of the summatory takes the same amount of time, independently of the value of n.
 
 ## Q3: Please measure with perf the number of cycles, instructions and context-switches for the application with 4294967295 steps.
+```
  11,954.27 msec task-clock:u              #    1.000 CPUs utilized            ( +-  0.02% )
                  0      context-switches:u        #    0.000 /sec
                  0      cpu-migrations:u          #    0.000 /sec
@@ -23,7 +24,7 @@ It does scale linearly because every step of the summatory takes the same amount
             15,789      branch-misses:u           #    0.00% of all branches          ( +-  0.69% )
 
           11.95566 +- 0.00234 seconds time elapsed  ( +-  0.02% )
-
+```
 
 ## Q4: Run pi_taylor_parallel for 4294967295 steps and 1, 2, 4, 8, and 16 threads, and perform an scalability analysis, including a plot and some measurement of the variability of the program, such as the coefficient of variation.
 
@@ -38,19 +39,10 @@ PLOT y el coeficiente
 
 ## Q5
 - 8 threads:    3.141592653 356509501
--               3.141592653 820931336
-In some extreme cases, ◦(a + ◦(b + c)) can be drastically different from
-◦(◦(a+b)+c). A simple example, in radix-β, precision-p arithmetic with
-round-to-nearest mode is a = β
-p+1
-, b = −β
-p+1, and c = 1, since
-RN(a + RN(b + c)) = RN(β
-p+1 − β
-p+1) = 0,
-whereas
-RN(RN(a + b) + c) = RN(0 + 1) = 1.
-
+- sequential    3.141592653 820931336
+---
+> **Note** In some extreme cases, ◦(a + ◦(b + c)) can be drastically different from ◦(◦(a+b)+c). A simple example, in radix-β, precision-p arithmetic with round-to-nearest mode is a = β p+1 , b = −β p+1, and c = 1, since RN(a + RN(b + c)) = RN(β p+1 − β p+1) = 0, whereas RN(RN(a + b) + c) = RN(0 + 1) = 1.
+---
 ## Qalpha
 
 - Kahan sum 4: 4.141.615 us -> 4.14 s
@@ -62,7 +54,7 @@ RN(RN(a + b) + c) = RN(0 + 1) = 1.
 ## Q6
 
 - 4 Threads
-
+```
             5,459.91 msec task-clock:u              #    3.000 CPUs utilized            ( +-  3.06% )
                  0      context-switches:u        #    0.000 /sec
                  0      cpu-migrations:u          #    0.000 /sec
@@ -73,9 +65,9 @@ RN(RN(a + b) + c) = RN(0 + 1) = 1.
             17,486      branch-misses:u           #    0.00% of all branches          ( +-  0.21% )
 
              1.820 +- 0.165 seconds time elapsed  ( +-  9.09% )
-
+```
 - 8 Threads
-
+```
 6,709.24 msec task-clock:u              #    4.783 CPUs utilized            ( +-  3.81% )
                  0      context-switches:u        #    0.000 /sec
                  0      cpu-migrations:u          #    0.000 /sec
@@ -86,7 +78,7 @@ RN(RN(a + b) + c) = RN(0 + 1) = 1.
             17,579      branch-misses:u           #    0.00% of all branches          ( +-  0.25% )
 
             1.4027 +- 0.0373 seconds time elapsed  ( +-  2.66% )
-
+```
 ## Qbeta
 
 - 6 threads

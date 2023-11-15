@@ -64,14 +64,16 @@ int main(int argc, const char *argv[]) {
 
     auto start = std::chrono::steady_clock::now();
     for(long unsigned int i = 0; i < threads; i++){
-        cout << "Thread lanzado diavolikamente: " << i <<" " <<i*steps_per_thread << " "<<  (i+1)*steps_per_thread << endl;
+        cout << "Thread dispatched " << i <<" " <<i*steps_per_thread << " "<<  (i+1)*steps_per_thread << endl;
         ths.push_back(thread(pi_taylor_chunk, ref(outputs), i, i*steps_per_thread, (i+1)*steps_per_thread));
     }
 
     for(auto &t : ths){
         t.join();
-        cout << "Thread acabado diavolikamente: "  << endl;
+        cout << "Thread finished"  << endl;
     }
+
+    // kahan summation
     for(auto output : outputs){
         my_float y = output - c;
         my_float t = pi + y;
@@ -80,11 +82,10 @@ int main(int argc, const char *argv[]) {
     }
     auto fin = std::chrono::steady_clock::now();
 
-
     std::cout << "For " << steps << ", pi value: "
         << std::setprecision(std::numeric_limits<long double>::digits10 + 1)
         << pi << std::endl;
-    double seconds = std::chrono::duration_cast<std::chrono::microseconds>(fin - start).count();
-    std::cout << "TIEMPO DIAVOLIKO: " << seconds << " us."<< std::endl;
+    double seconds = std::chrono::duration_cast<std::chrono::nanoseconds>(fin - start).count();
+    std::cout << "execution time: " << seconds / 1000.0 << " us."<< std::endl;
 }
 

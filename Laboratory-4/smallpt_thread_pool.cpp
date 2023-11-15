@@ -230,8 +230,36 @@ void write_output_file(const std::unique_ptr<Vec[]>& c, size_t w, size_t h)
     }
 }
 
+void parallel_render(
+    int w, int h, int w_div, int h_div, int samps, Ray cam, Vec cx, Vec cy, Vec *c) 
+{
+    // create a thread pool
+    thread_pool tp;
+    // launch the tasks
+    const int width_x = w / w_div;
+    const int height_y = h / h_div;
+
+    std::cout << width_x << "; " << height_y << std::endl;
+    std::cout << w_div << ", " << h_div << std::endl;
+
+    for ( int i = 0; i < h_div; i++ ) {
+        for ( int j = 0; j < w_div; j++ ) {
+            size_t lx = j * width_x;
+            size_t ly = i * height_y;
+
+            size_t ux = j == w_div - 1 ? w : lx + width_x;
+            size_t uy = i == h_div - 1 ? h : ly + height_y;
+
+            Region reg(lx, ux, ly, uy);
+            tp.submit([=](){ render(w, h, samps, cam, cx, cy, c, reg); });
+            reg.print();
+        }
+    }
+    // join_threads will call its destructor at the end of this scope
+}
+
 int main(int argc, char *argv[]){
-    size_t w=1024, h=768, samps = 2; // # samples
+    size_t w=512, h=512, samps = 64;// w=1024, h=768, samps = 2; // # samples
 
     Ray cam(Vec(50,52,295.6), Vec(0,-0.042612,-1).norm()); // cam pos, dir
     Vec cx=Vec(w*.5135/h), cy=(cx%cam.d).norm()*.5135;
@@ -245,11 +273,9 @@ int main(int argc, char *argv[]){
 
     auto *c_ptr = c.get(); // raw pointer to Vector c
 
-    // create a thread pool
+    parallel_render(w, h, w_div, h_div, samps, cam, cx, cy, c_ptr);
 
-    // launch the tasks
-
-
+    std::cout << "rendering finished." << std::endl;
     // wait for completion
     auto stop = std::chrono::steady_clock::now();
     std::cout << "Execution time: " <<

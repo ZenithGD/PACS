@@ -1,5 +1,13 @@
 {
     "files.associations": {
+        "*.sql": "sql",
+        "*.css": "css",
+        ".env": "shellscript",
+        "*.pcode": "xml",
+        "*.jj": "java",
+        "*.uss": "css",
+        "*.uxml": "xml",
+        "*.physicsMaterial2D": "yaml",
         "array": "cpp",
         "atomic": "cpp",
         "bit": "cpp",
@@ -49,6 +57,24 @@
         "stdexcept": "cpp",
         "streambuf": "cpp",
         "thread": "cpp",
-        "typeinfo": "cpp"
+        "typeinfo": "cpp",
+        "csignal": "cpp",
+        "cstring": "cpp",
+        "any": "cpp",
+        "bitset": "cpp",
+        "codecvt": "cpp",
+        "compare": "cpp",
+        "complex": "cpp",
+        "concepts": "cpp",
+        "list": "cpp",
+        "map": "cpp",
+        "set": "cpp",
+        "iomanip": "cpp",
+        "numbers": "cpp",
+        "semaphore": "cpp",
+        "stop_token": "cpp",
+        "cinttypes": "cpp",
+        "typeindex": "cpp",
+        "variant": "cpp"
     }
 }

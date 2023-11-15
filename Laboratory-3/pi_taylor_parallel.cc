@@ -64,19 +64,19 @@ int main(int argc, const char *argv[]) {
 
     auto start = std::chrono::steady_clock::now();
     for(long unsigned int i = 0; i < threads; i++){
-        cout << "Thread lanzado diavolikamente: " << i <<" " <<i*steps_per_thread << " "<<  (i+1)*steps_per_thread << endl;
+        cout << "Thread dispatched " << i <<" " <<i*steps_per_thread << " "<<  (i+1)*steps_per_thread << endl;
         ths.push_back(thread(pi_taylor_chunk, ref(outputs), i, i*steps_per_thread, (i+1)*steps_per_thread, ref(times)));
     }
 
     for(auto &t : ths){
         t.join();
-        cout << "Thread acabado diavolikamente: "  << endl;
+        cout << "Thread finished: "  << endl;
     }
     float count = 0;
     for(size_t i = 0; i < outputs.size(); i++){
         pi += outputs[i];
         count += times[i];
-        std::cout << "El thread " << i << " ha tardado " << (times[i]/1000000.0) << " segundos DIAVOLIKOS." << std::endl;
+        std::cout << "T " << i << " took " << (times[i]/1000000.0) << " s." << std::endl;
     }
     float mean = count/threads;
     float var = 0.0;
@@ -84,16 +84,16 @@ int main(int argc, const char *argv[]) {
         float aux = mean - times[i];
         var += aux*aux;
     }
-    std::cout << "Los threads han tardado " << ((mean)/1000000.0) << " segundos DIAVOLIKOS como media DIAVOLIKA." << std::endl;
-    std::cout << "Con una desviacion DIAVOLIKA de " << ((sqrt(var))/1000000.0) << " segundos DIAVOLIKOS." << std::endl;
-    std::cout << "Con una coeficiente DIAVOLIKO de variacion de " << ((sqrt(var)/mean))  << std::endl;
+    std::cout << "mean exec time: " << ((mean)/1000000.0) << " s." << std::endl;
+    std::cout << "stddev: " << ((sqrt(var))/1000000.0) << " s." << std::endl;
+    std::cout << "cv: " << ((sqrt(var)/mean))  << std::endl;
     auto fin = std::chrono::steady_clock::now();
 
 
     std::cout << "For " << steps << ", pi value: "
         << std::setprecision(std::numeric_limits<long double>::digits10 + 1)
         << pi << std::endl;
-    double seconds = std::chrono::duration_cast<std::chrono::microseconds>(fin - start).count();
-    std::cout << "TIEMPO DIAVOLIKO: " << seconds << " us."<< std::endl;
+    double seconds = std::chrono::duration_cast<std::chrono::nanoseconds>(fin - start).count();
+    std::cout << "execution time: " << seconds / 1000.0 << " us."<< std::endl;
 }
 

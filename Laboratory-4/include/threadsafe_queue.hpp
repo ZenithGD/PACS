@@ -11,13 +11,13 @@ class threadsafe_queue
 private:
     mutable std::mutex _m;
     std::queue<T> _q;
-    std::conditional_variable _empty;
+    std::condition_variable _empty;
 public:
     threadsafe_queue() {}
 
     threadsafe_queue(const threadsafe_queue &other)
     {
-        q = other.q;
+        _q = other.q;
     }
 
     threadsafe_queue &operator=(const threadsafe_queue &) = delete;
@@ -25,18 +25,19 @@ public:
     void push(T new_value)
     {
         std::lock_guard<std::mutex> lock(_m);
-        q.push(new_value);
-        empty.notify_one();
+        _q.push(new_value);
+        _empty.notify_one();
     }
 
     bool try_pop(T &value)
     {
         std::lock_guard<std::mutex> lock(_m);
-        if(q.empty()){ // MAL
+        if(_q.empty()){ // MAL
             return false;
-        } else{ // EPIKO
-            value = q.front();
-            q.pop();
+        } 
+        else { // EPIKO
+            value = _q.front();
+            _q.pop();
             return true;
         }
     }
@@ -44,23 +45,23 @@ public:
     void wait_and_pop(T &value)
     {
         std::unique_lock<std::mutex> lock(_m);
-        empty.wait(lock, []{return !q.empty()});
-        value = q.front();
-        q.pop();
+        _empty.wait(lock, [=]{return !_q.empty(); });
+        value = _q.front();
+        _q.pop();
     }
 
     std::shared_ptr<T> wait_and_pop()
     {
         std::unique_lock<std::mutex> lock(_m);
-        empty.wait(lock, []{return !q.empty()});
-        T value = q.front();
-        q.pop();
-
+        _empty.wait(lock, [=]{return !_q.empty(); });
+        std::shared_ptr<T> value(_q.front());
+        _q.pop();
+        return value;
     }
 
     bool empty() const
     {
         std::lock_guard<std::mutex> lock(_m);
-        return q.empty();
+        return _q.empty();
     }
 };

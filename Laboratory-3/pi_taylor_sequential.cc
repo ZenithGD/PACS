@@ -33,9 +33,9 @@ int main(int argc, const char *argv[]) {
     auto pi = pi_taylor(steps);
     
     auto fin = std::chrono::steady_clock::now();
-    double seconds = std::chrono::duration_cast<std::chrono::microseconds>(fin - start).count();
     std::cout << "For " << steps << ", pi value: "
-        << std::setprecision(std::numeric_limits<my_float>::digits10 + 1)
+        << std::setprecision(std::numeric_limits<long double>::digits10 + 1)
         << pi << std::endl;
-    std::cout << "TIEMPO DIAVOLIKO: " << seconds << " us."<< std::endl;
+    double seconds = std::chrono::duration_cast<std::chrono::nanoseconds>(fin - start).count();
+    std::cout << "execution time: " << seconds / 1000.0 << " us."<< std::endl;
 }
