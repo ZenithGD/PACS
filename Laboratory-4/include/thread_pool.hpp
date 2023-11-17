@@ -13,8 +13,6 @@ class thread_pool {
     std::vector<std::thread> _threads;
     size_t _n_threads;
     join_threads _joiner;
-    
-    std::atomic<bool> _done;
 
     using task_type = void();
 

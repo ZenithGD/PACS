@@ -239,9 +239,6 @@ void parallel_render(
     const int width_x = w / w_div;
     const int height_y = h / h_div;
 
-    std::cout << width_x << "; " << height_y << std::endl;
-    std::cout << w_div << ", " << h_div << std::endl;
-
     for ( int i = 0; i < h_div; i++ ) {
         for ( int j = 0; j < w_div; j++ ) {
             size_t lx = j * width_x;
@@ -252,14 +249,13 @@ void parallel_render(
 
             Region reg(lx, ux, ly, uy);
             tp.submit([=](){ render(w, h, samps, cam, cx, cy, c, reg); });
-            reg.print();
         }
     }
     // join_threads will call its destructor at the end of this scope
 }
 
 int main(int argc, char *argv[]){
-    size_t w=512, h=512, samps = 64;// w=1024, h=768, samps = 2; // # samples
+    size_t w=1024, h=768, samps = 2; // # samples
 
     Ray cam(Vec(50,52,295.6), Vec(0,-0.042612,-1).norm()); // cam pos, dir
     Vec cx=Vec(w*.5135/h), cy=(cx%cam.d).norm()*.5135;
