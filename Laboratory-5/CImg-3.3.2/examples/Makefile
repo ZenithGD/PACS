@@ -153,7 +153,11 @@ VT100_CFLAGS = -Dcimg_use_vt100
 # Flags to enable code optimization by the compiler.
 OPT_CFLAGS = -Ofast
 ifdef IS_GCC
-OPT_CFLAGS = -Ofast -mtune=generic
+# Add -mtune=generic for GCC if supported.
+NO_MTUNE_GENERIC = $(shell $(CXX) -mtune=generic -E - < /dev/null > /dev/null 2>&1; echo $$?)
+ifeq ($(NO_MTUNE_GENERIC),0)
+OPT_CFLAGS += -mtune=generic
+endif
 endif
 ifdef IS_ICPC
 OPT_CFLAGS = -fast
@@ -172,7 +176,7 @@ endif
 
 # Flags to enable OpenCV support.
 OPENCV_DEFINE = -Dcimg_use_opencv
-OPENCV_INCDIR = $(shell pkg-config opencv --cflags || echo -I/usr/include/opencv) -I/usr/include/opencv
+OPENCV_INCDIR = $(shell pkg-config opencv --cflags || echo -I/usr/include/opencv) -I/usr/include/opencv -I/usr/include/opencv4
 OPENCV_CFLAGS = $(OPENCV_DEFINE) $(OPENCV_INCDIR)
 OPENCV_LIBS = $(shell pkg-config opencv --libs || echo -lopencv_core -lopencv_highgui)
 
@@ -187,7 +191,7 @@ X11_CFLAGS = $(X11_DEFINE) $(X11_INCDIR)
 X11_LIBS = $(shell pkg-config --libs x11 || echo -L/usr/X11R6/lib -lX11) -lpthread
 
 # Flags to enable fast image display, using the XSHM library (when using X11).
-# !!! Seems to randomly crash when used on MacOSX and 64bits systems, so use it only when necessary !!!
+# !!! Seems to randomly crash when used on MacOS and 64bits systems, so use it only when necessary !!!
 XSHM_CFLAGS = # -Dcimg_use_xshm $(shell pkg-config --cflags xcb-shm)
 XSHM_LIBS = # $(shell pkg-config --libs xcb-shm || echo -L$(USR)/X11R6/lib -lXext)
 
@@ -199,7 +203,7 @@ GDI32_LIBS = -lgdi32
 
 # Flags to enable screen mode switching, using the XRandr library (when using X11).
 # ( http://www.x.org/wiki/Projects/XRandR )
-# !!! Not supported by the X11 server on MacOSX, so do not use it on MacOSX !!!
+# !!! Not supported by the X11 server on MacOS, so do not use it on MacOS !!!
 XRANDR_DEFINE = -Dcimg_use_xrandr
 XRANDR_INCDIR =
 XRANDR_CFLAGS = $(XRANDR_DEFINE) $(XRANDR_INCDIR)
@@ -225,6 +229,13 @@ TIFF_DEFINE = -Dcimg_use_tiff
 TIFF_INCDIR =
 TIFF_CFLAGS = $(TIFF_DEFINE) $(TIFF_INCDIR)
 TIFF_LIBS = -ltiff
+
+# Flags to enable native support for loading HEIF image files, using the libheif library.
+# ( https://github.com/strukturag/libheif )
+HEIF_DEFINE = -Dcimg_use_heif
+HEIF_INCDIR =
+HEIF_CFLAGS = $(HEIF_DEFINE) $(HEIF_INCDIR)
+HEIF_LIBS = -lheif
 
 # Flags to enable native support for MINC2 image files, using the MINC2 library.
 # ( http://en.wikibooks.org/wiki/MINC/Reference/MINC2.0_Users_Guide )
@@ -293,9 +304,6 @@ BOARD_INCDIR = -I/usr/include/board
 BOARD_CFLAGS = $(BOARD_DEFINE) $(BOARD_INCDIR)
 BOARD_LIBS = -lboard
 
-# Flags to compile on Sun Solaris
-SOLARIS_LIBS = -R$(X11PATH)/lib -lrt -lnsl -lsocket
-
 # Flags to compile GIMP plug-ins.
 ifeq ($(MSYSTEM),MINGW32)
 GIMP_CFLAGS = -mwindows
@@ -322,17 +330,11 @@ menu:
 	@echo "  > mlinux   : Linus/BSD target, no display, minimal features, optimizations enabled."
 	@echo "  > Mlinux   : Linux/BSD target, X11 display, maximal features, optimizations enabled."
 	@echo
-	@echo "  > solaris  : Sun Solaris target, X11 display, optimizations disabled."
-	@echo "  > dsolaris : Sun Solaris target, X11 display, debug mode."
-	@echo "  > osolaris : Sun Solaris target, X11 display, optimizations enabled."
-	@echo "  > msolaris : Sun Solaris target, no display, minimal features, optimizations enabled."
-	@echo "  > Msolaris : Sun Solaris target, X11 display, maximal features, optimizations enabled."
-	@echo
-	@echo "  > macosx   : MacOSX target, X11 display, optimizations disabled."
-	@echo "  > dmacosx  : MacOSX target, X11 display, debug mode."
-	@echo "  > omacosx  : MacOSX target, X11 display, optimizations enabled."
-	@echo "  > mmacosx  : MacOSX target, no display, minimal features, optimizations enabled."
-	@echo "  > Mmacosx  : MacOSX target, X11 display, maximal features, optimizations enabled."
+	@echo "  > macos    : MacOS target, X11 display, optimizations disabled."
+	@echo "  > dmacos   : MacOS target, X11 display, debug mode."
+	@echo "  > omacos   : MacOS target, X11 display, optimizations enabled."
+	@echo "  > mmacos   : MacOS target, no display, minimal features, optimizations enabled."
+	@echo "  > Mmacos   : MacOS target, X11 display, maximal features, optimizations enabled."
 	@echo
 	@echo "  > windows  : Windows target, GDI32 display, optimizations disabled."
 	@echo "  > dwindows : Windows target, GDI32 display, debug mode."
@@ -360,12 +362,14 @@ custom:
 $(ANSI_CFLAGS) \
 $(VT100_CFLAGS) \
 $(TIFF_CFLAGS) \
+$(HEIF_CFLAGS) \
 $(X11_CFLAGS) \
 $(LAPACK_CFLAGS) \
 $(XSHM_CFLAGS)" \
 "CONF_LIBS = \
 $(X11_LIBS) \
 $(TIFF_LIBS) \
+$(HEIF_LIBS) \
 $(LAPACK_LIBS) \
 $(XSHM_LIBS)" \
 all $(EXTRA_FILES)
@@ -453,6 +457,7 @@ $(X11_CFLAGS) \
 $(XSHM_CFLAGS) \
 $(XRANDR_CFLAGS) \
 $(TIFF_CFLAGS) \
+$(HEIF_CFLAGS) \
 $(OPENEXR_CFLAGS) \
 $(PNG_CFLAGS) \
 $(JPEG_CFLAGS) \
@@ -466,6 +471,7 @@ $(X11_LIBS) \
 $(XSHM_LIBS) \
 $(XRANDR_LIBS) \
 $(TIFF_LIBS) -ltiffxx \
+$(HEIF_LIBS) \
 $(OPENEXR_LIBS) \
 $(PNG_LIBS) \
 $(JPEG_LIBS) \
@@ -477,94 +483,8 @@ $(FFTW3_LIBS)" \
 "STRIP_EXE=true" \
 all $(EXTRA_FILES)
 
-# Sun Solaris targets, with X11 display.
-solaris:
-	@$(MAKE) \
-"CONF_CFLAGS = \
-$(ANSI_CFLAGS) \
-$(VT100_CFLAGS) \
-$(X11_CFLAGS) \
-$(XSHM_CFLAGS)" \
-"CONF_LIBS = \
-$(SOLARIS_LIBS) \
-$(X11_LIBS) \
-$(XSHM_LIBS)" \
-all
-
-dsolaris:
-	@$(MAKE) \
-"CONF_CFLAGS = \
-$(ANSI_CFLAGS) \
-$(DEBUG_CFLAGS) \
-$(VT100_CFLAGS) \
-$(X11_CFLAGS) \
-$(XSHM_CFLAGS)" \
-"CONF_LIBS = \
-$(SOLARIS_LIBS) \
-$(X11_LIBS) \
-$(XSHM_LIBS)" \
-all
-
-osolaris:
-	@$(MAKE) \
-"CONF_CFLAGS = \
-$(ANSI_CFLAGS) \
-$(OPT_CFLAGS) \
-$(VT100_CFLAGS) \
-$(X11_CFLAGS) \
-$(XSHM_CFLAGS)" \
-"CONF_LIBS = \
-$(SOLARIS_LIBS) \
-$(X11_LIBS) \
-$(XSHM_LIBS)" \
-"STRIP_EXE=true" \
-all
-
-msolaris:
-	@$(MAKE) \
-"CONF_CFLAGS = \
-$(ANSI_CFLAGS) \
-$(NODISPLAY_CFLAGS) \
-$(OPT_CFLAGS)" \
-"STRIP_EXE=true" \
-all
-
-Msolaris:
-	@$(MAKE) \
-"CONF_CFLAGS = \
-$(OPT_CFLAGS) \
-$(VT100_CFLAGS) \
-$(X11_CFLAGS) \
-$(XSHM_CFLAGS) \
-$(XRANDR_CFLAGS) \
-$(TIFF_CFLAGS) \
-$(MINC2_CFLAGS) \
-$(OPENEXR_CFLAGS) \
-$(PNG_CFLAGS) \
-$(JPEG_CFLAGS) \
-$(ZLIB_CFLAGS) \
-$(OPENCV_CFLAGS) \
-$(MAGICK_CFLAGS) \
-$(FFTW3_CFLAGS)" \
-"CONF_LIBS = \
-$(SOLARIS_LIBS) \
-$(X11_LIBS) \
-$(XSHM_LIBS) \
-$(XRANDR_LIBS) \
-$(TIFF_LIBS) \
-$(MINC2_LIBS) \
-$(OPENEXR_LIBS) \
-$(PNG_LIBS) \
-$(JPEG_LIBS) \
-$(ZLIB_LIBS) \
-$(OPENCV_LIBS) \
-$(MAGICK_LIBS) \
-$(FFTW3_LIBS)" \
-"STRIP_EXE=true" \
-all $(EXTRA_FILES)
-
-# MacOsX targets, with X11 display.
-macosx:
+# MacOs targets, with X11 display.
+macos:
 	@$(MAKE) \
 "CONF_CFLAGS = \
 $(ANSI_CFLAGS) \
@@ -574,7 +494,7 @@ $(X11_CFLAGS)" \
 $(X11_LIBS)" \
 all
 
-dmacosx:
+dmacos:
 	@$(MAKE) \
 "CONF_CFLAGS = \
 $(ANSI_CFLAGS) \
@@ -585,7 +505,7 @@ $(X11_CFLAGS)" \
 $(X11_LIBS)" \
 all
 
-omacosx:
+omacos:
 	@$(MAKE) \
 "CONF_CFLAGS = \
 $(ANSI_CFLAGS) \
@@ -596,7 +516,7 @@ $(X11_CFLAGS)" \
 $(X11_LIBS)" \
 all
 
-mmacosx:
+mmacos:
 	@$(MAKE) \
 "CONF_CFLAGS = \
 $(ANSI_CFLAGS) \
@@ -604,13 +524,14 @@ $(NODISPLAY_CFLAGS) \
 $(OPT_CFLAGS)" \
 all
 
-Mmacosx:
+Mmacos:
 	@$(MAKE) \
 "CONF_CFLAGS = \
 $(OPT_CFLAGS) \
 $(VT100_CFLAGS) \
 $(X11_CFLAGS) \
 $(TIFF_CFLAGS) \
+$(HEIF_CFLAGS) \
 $(MINC2_CFLAGS) \
 $(OPENEXR_CFLAGS) \
 $(PNG_CFLAGS) \
@@ -622,6 +543,7 @@ $(FFTW3_CFLAGS)" \
 "CONF_LIBS = \
 $(X11_LIBS) \
 $(TIFF_LIBS) \
+$(HEIF_LIBS) \
 $(MINC2_LIBS) \
 $(OPENEXR_LIBS) \
 $(PNG_LIBS) \
@@ -670,6 +592,7 @@ Mwindows:
 "CONF_CFLAGS = \
 $(OPT_CFLAGS) \
 $(TIFF_CFLAGS) \
+$(HEIF_CFLAGS) \
 $(PNG_CFLAGS) \
 $(JPEG_CFLAGS) \
 $(ZLIB_CFLAGS) \
@@ -678,6 +601,7 @@ $(FFTW3_CFLAGS)" \
 "CONF_LIBS = \
 $(GDI32_LIBS) \
 $(TIFF_LIBS) \
+$(HEIF_LIBS) \
 $(PNG_LIBS) \
 $(JPEG_LIBS) \
 $(ZLIB_LIBS) \

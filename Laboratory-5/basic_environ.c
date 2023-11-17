@@ -58,16 +58,28 @@ int main(int argc, char** argv)
   printf("Number of available platforms: %d\n\n", n_platforms);
 
   for (int i = 0; i < n_platforms; i++ ){
-    err= clGetPlatformInfo(platforms_ids[i], CL_PLATFORM_NAME, /***???***/);
+    err= clGetPlatformInfo(platforms_ids[i], CL_PLATFORM_NAME, t_buf, str_buffer, NULL);
     cl_error (err, "Error: Failed to get info of the platform\n");
     printf( "\t[%d]-Platform Name: %s\n", i, str_buffer);
+
+    err= clGetPlatformInfo(platforms_ids[i], CL_PLATFORM_VERSION, t_buf, str_buffer, NULL);
+    cl_error (err, "Error: Failed to get info of the platform\n");
+    printf( "\t[%d]-Platform Version: %s\n", i, str_buffer);
+
+    err= clGetPlatformInfo(platforms_ids[i], CL_PLATFORM_PROFILE, t_buf, str_buffer, NULL);
+    cl_error (err, "Error: Failed to get info of the platform\n");
+    printf( "\t[%d]-Platform Profile: %s\n", i, str_buffer);
+
+    err= clGetPlatformInfo(platforms_ids[i], CL_PLATFORM_VENDOR, t_buf, str_buffer, NULL);
+    cl_error (err, "Error: Failed to get info of the platform\n");
+    printf( "\t[%d]-Platform Vendor: %s\n", i, str_buffer);
   }
   printf("\n");
   // ***Task***: print on the screen the name, host_timer_resolution, vendor, versionm, ...
 	
-  // 2. Scan for devices in each platform
+  //2. Scan for devices in each platform
   for (int i = 0; i < n_platforms; i++ ){
-    err = clGetDeviceIDs( /***???***/, num_devices_ids, devices_ids[i], &(n_devices[i]));
+    err = clGetDeviceIDs( platforms_ids[i], CL_DEVICE_TYPE_ALL ,num_devices_ids, devices_ids[i], &(n_devices[i]));
     cl_error(err, "Error: Failed to Scan for Devices IDs");
     printf("\t[%d]-Platform. Number of available devices: %d\n", i, n_devices[i]);
 
@@ -79,22 +91,82 @@ int main(int argc, char** argv)
       cl_uint max_compute_units_available;
       err = clGetDeviceInfo(devices_ids[i][j], CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(max_compute_units_available), &max_compute_units_available, NULL);
       cl_error(err, "clGetDeviceInfo: Getting device max compute units available");
-      printf("\t\t [%d]-Platform [%d]-Device CL_DEVICE_MAX_COMPUTE_UNITS: %d\n\n", i, j, max_compute_units_available);
+      printf("\t\t [%d]-Platform [%d]-Device CL_DEVICE_MAX_COMPUTE_UNITS: %d\n", i, j, max_compute_units_available);
+
+      cl_ulong global_mem_size;
+      err = clGetDeviceInfo(devices_ids[i][j], CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(global_mem_size), &global_mem_size, NULL);
+      cl_error(err, "clGetDeviceInfo: Getting device max compute units available");
+      printf("\t\t [%d]-Platform [%d]-Device CL_DEVICE_GLOBAL_MEM_SIZE: %d\n\n", i, j, global_mem_size);
+
+      cl_ulong local_mem_size;
+      err = clGetDeviceInfo(devices_ids[i][j], CL_DEVICE_LOCAL_MEM_SIZE, sizeof(local_mem_size), &local_mem_size, NULL);
+      cl_error(err, "clGetDeviceInfo: Getting device max compute units available");
+      printf("\t\t [%d]-Platform [%d]-Device CL_DEVICE_LOCAL_MEM_SIZE: %d\n", i, j, local_mem_size);
+
+      cl_ulong cache_size;
+      err = clGetDeviceInfo(devices_ids[i][j], CL_DEVICE_GLOBAL_MEM_CACHE_SIZE, sizeof(cache_size), &cache_size, NULL);
+      cl_error(err, "clGetDeviceInfo: Getting device max compute units available");
+      printf("\t\t [%d]-Platform [%d]-Device CL_DEVICE_GLOBAL_MEM_CACHE_SIZE: %d\n", i, j, cache_size);
+
+      cl_ulong max_work_group_size;
+      err = clGetDeviceInfo(devices_ids[i][j], CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(max_work_group_size), &max_work_group_size, NULL);
+      cl_error(err, "clGetDeviceInfo: Getting device max compute units available");
+      printf("\t\t [%d]-Platform [%d]-Device CL_DEVICE_MAX_WORK_GROUP_SIZE: %d\n", i, j, max_work_group_size);
+
+      cl_ulong profile_timer;
+      err = clGetDeviceInfo(devices_ids[i][j], CL_DEVICE_PROFILING_TIMER_RESOLUTION, sizeof(profile_timer), &profile_timer, NULL);
+      cl_error(err, "clGetDeviceInfo: Getting device max compute units available");
+      printf("\t\t [%d]-Platform [%d]-Device CL_DEVICE_PROFILING_TIMER_RESOLUTION: %d\n", i, j, profile_timer);
     }
   }	
-  // ***Task***: print on the screen the cache size, global mem size, local memsize, max work group size, profiling timer resolution and ... of each device
+  // // ***Task***: print on the screen the cache size, global mem size, local memsize, max work group size, profiling timer resolution and ... of each device
 
 
 
   // 3. Create a context, with a device
-  cl_context_properties properties[] = { CL_CONTEXT_PLATFORM, (cl_context_properties)platforms_ids[/***???***/], 0};
-  context = clCreateContext(properties, /***???***/, NULL, NULL, &err);
+  cl_context_properties properties[] = { CL_CONTEXT_PLATFORM, (cl_context_properties)platforms_ids[0], 0};
+  context = clCreateContext(properties, 1, devices_ids[0] ,NULL, NULL, &err);
   cl_error(err, "Failed to create a compute context\n");
 
   // 4. Create a command queue
   cl_command_queue_properties proprt[] = { CL_QUEUE_PROPERTIES, CL_QUEUE_PROFILING_ENABLE, 0 };
-  command_queue = clCreateCommandQueueWithProperties( /***???***/, proprt, &err);
+  command_queue = clCreateCommandQueueWithProperties( context, devices_ids[0][0], proprt, &err);
   cl_error(err, "Failed to create a command queue\n");
+
+  // Calculate size of the file
+  FILE *fileHandler = fopen("kernel.cl", "r");
+  fseek(fileHandler, 0, SEEK_END);
+  size_t fileSize = ftell(fileHandler);
+  rewind(fileHandler);
+  // read kernel source into buffer
+  char * sourceCode = (char*) malloc(fileSize + 1);
+  sourceCode[fileSize] = '\0';
+  fread(sourceCode, sizeof(char), fileSize, fileHandler);
+  fclose(fileHandler);
+
+  const char* src_arr[1] = {sourceCode};
+
+  const size_t lengths[1] = {strlen(sourceCode)};
+
+  
+  // create program from buffer
+  cl_program program = clCreateProgramWithSource(context,1, src_arr, lengths, &err);
+  cl_error(err, "Failed to create program with source\n");
+  free(sourceCode);
+
+
+  // Build the executable and check errors
+  err = clBuildProgram(program, 0, NULL, NULL, NULL, NULL);
+  if (err != CL_SUCCESS){
+    size_t len;
+    char buffer[2048];
+
+    printf("Error: Some error at building process.\n");
+    clGetProgramBuildInfo(program, devices_ids[0][0], CL_PROGRAM_BUILD_STATUS, strlen(buffer), &buffer, NULL);
+    printf("%s\n", buffer);
+    exit(-1);
+  }
+  printf("SUCCESS");
 
 
 
