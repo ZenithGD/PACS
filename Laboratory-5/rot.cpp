@@ -1,6 +1,9 @@
+#define cimg_use_jpeg
 #include <iostream>
+#include <math.h>
 #include "CImg.h"
 using namespace cimg_library;
+using namespace std;
 
 
 int main(){
@@ -16,38 +19,40 @@ int main(){
     
     const int ancho = img.width();
     const int alto = img.height();
-    const int x_inicio = 0;
-    const int y_inicio = alto / 2;
-    const int x_fin = ancho - 1;
-    const int y_fin = alto / 2;
-    unsigned char* ptrImagen = img.data(); // YA tenemos el puntero a la imagen
+    unsigned char* ptrImagen = img.data(); 
+
+    float angle = 0;
+    int x0 = alto/2;
+    int y0 = ancho/2;
+
     unsigned char* imgOUT = new unsigned char[sizeof(unsigned char) * alto * ancho * 3];
-    for(int i = 0; i < 9; i++){
-      printf("COLOR:%d\n", ptrImagen[i]);
-    } 
-    int fils = alto;
-    int cols = ancho;
-    unsigned char blue[] = { 0,0,255 };  
-    img.draw_line(x_inicio, y_inicio, x_fin, y_fin, blue);
-    
+    for(int i = 0; i < alto; i++){
+        for(int j = 0; j < ancho; j++){
+            
+            int x2 = cos(angle) * (i - x0) - sin(angle)*(j-y0) + x0;
+            int y2 = sin(angle) * (i - x0) + cos(angle)*(j-y0) + y0;
+            if(x2 == 0){
+                x2 = x2 + 1;
+            } else if(x2 == alto){
+                x2 = x2 - 1;
+            }
+            if(y2 == 0){
+                y2 = y2 + 1;
+            } else if(y2 == ancho){
+                y2 = y2 - 1;
+            }
+            for(int k = 0; k < 3; k++){
+                imgOUT[alto*ancho*k +  i * ancho + j ] = img[alto*ancho*k +  x2 * ancho + y2];
+            }
+        }
+    }
     
 
-    for(int i = 0; i < alto; i++){
-      for(int j = 0; j < ancho/2; j++){
-        for(int k=0; k < 3; k++){
-          imgOUT[fils*cols*k +  i * cols + j ] = ptrImagen[fils*cols*k +  i * cols + cols -j -1 ];
-          imgOUT[fils*cols*k +  i * cols + cols -j -1  ] = ptrImagen[fils*cols*k +  i * cols + j ];
-        }
-      }
-    }
+
     for (int i = 0; i < ancho * alto*3; ++i) {
         ptrImagen[i] = static_cast<unsigned char>(imgOUT[i]);
     }
-
-
     CImgDisplay ventana(img, "Imagen");
-    
-
     while (!ventana.is_closed()) {
         // Esperar a eventos en la ventana
         ventana.wait();
