@@ -7,6 +7,7 @@ def main():
     df1 = pd.read_csv("./times-row.csv", delimiter=';')
     df2 = pd.read_csv("./times-col.csv", delimiter=';')
     df3 = pd.read_csv("./times-cell.csv", delimiter=';')
+    df4 = pd.read_csv("./times-cv.csv", delimiter=';')
     
     plt.figure()
     plt.loglog(df1['divs'], df1['time (ms)'], marker='o', linestyle='-', color="red", label="By rows")
@@ -24,8 +25,18 @@ def main():
     plt.legend()
     plt.plot()
     
-
     plt.show()
 
+    plt.loglog(df4['divs'], df4['time (ms)'], marker='o', linestyle='-', color="green", label="By rows and columns")
+    ticks = [ 2**i for i in range(8) ]
+    plt.xticks(ticks, ticks)
+    plt.xlabel('divisions')
+    plt.ylabel('time (ms)')
+    plt.title('Time w.r.t Number of divisions for CV pipeline')
+    plt.grid(True)
+    plt.legend()
+    plt.plot()
+
+    plt.show()
 if __name__ == '__main__':
     main()
