@@ -82,7 +82,7 @@ int main(int argc, char** argv)
   cl_error(err, "Failed to create a command queue\n");
 
   // Calculate size of the file
-  FILE *fileHandler = fopen("hist_kernel.cl", "r");
+  FILE *fileHandler = fopen("histogram/hist_tile_kernel.cl", "r");
   fseek(fileHandler, 0, SEEK_END);
   size_t fileSize = ftell(fileHandler);
   rewind(fileHandler);
@@ -146,7 +146,7 @@ int main(int argc, char** argv)
     int xDiv = 10;
     int yDiv = 10;
 
-    int nTiles = 
+    int nTiles = 10;
   
 
   // Create OpenCL buffer visible to the OpenCl runtime
