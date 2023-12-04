@@ -5,11 +5,12 @@
 //
 // 
 ////////////////////////////////////////////////////////////////////
-
+#define cimg_use_jpeg
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <iostream>
 #include <math.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -22,7 +23,7 @@
 #include "CImg.h"
 
 using namespace cimg_library;
-  
+using namespace std;
 // check error, in such a case, it exits
 
 void cl_error(cl_int code, const char *string){
@@ -80,7 +81,7 @@ int main(int argc, char** argv)
   cl_error(err, "Failed to create a command queue\n");
 
   // Calculate size of the file
-  FILE *fileHandler = fopen("flipINPLACE_kernel.cl", "r");
+  FILE *fileHandler = fopen("rot_kernel.cl", "r");
   fseek(fileHandler, 0, SEEK_END);
   size_t fileSize = ftell(fileHandler);
   rewind(fileHandler);
@@ -115,7 +116,7 @@ int main(int argc, char** argv)
   clGetProgramBuildInfo(program, devices_ids[0][0], CL_PROGRAM_BUILD_LOG, sizeof(buffer), &buffer, NULL);
   printf("%s\n", buffer);
 
-  cl_kernel kernel = clCreateKernel(program, "flip", &err);
+  cl_kernel kernel = clCreateKernel(program, "rot", &err);
   cl_error(err, "Failed to create kernel from the program\n");
 
   //CREAR LAS VARIABLES QUE USARA EL KERNEL
@@ -137,38 +138,60 @@ int main(int argc, char** argv)
 
   unsigned char* ptrImagen = img.data(); // YA tenemos el puntero a la imagen
 
-  
+  float angle = M_PI/4.0;
+  int x0 = alto/2;
+  int y0 = ancho/2;
+
+  cout << "ALTO: " << x0 << ". ANCHO: " << y0 << endl;
 
   // Create OpenCL buffer visible to the OpenCl runtime
-  cl_mem in_out_device_object  = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(unsigned char) * alto * ancho * 3, NULL, &err);
+  cl_mem in_device_object  = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(unsigned char) * alto * ancho * 3, NULL, &err);
   cl_error(err, "Failed to create in memory buffer at device\n");
+  cl_mem out_device_object = clCreateBuffer(context, CL_MEM_WRITE_ONLY, sizeof(unsigned char) * alto * ancho * 3, NULL, &err);
+  cl_error(err, "Failed to create out memory buffer at device\n");
 
 
    // Write date into the memory object 
-  err = clEnqueueWriteBuffer(command_queue, in_out_device_object, CL_TRUE, 0, sizeof(unsigned char) * alto * ancho * 3, 
+  err = clEnqueueWriteBuffer(command_queue, in_device_object, CL_TRUE, 0, sizeof(unsigned char) * alto * ancho * 3, 
                             ptrImagen, 0, NULL, NULL);
   cl_error(err, "Failed to enqueue a write command\n");
 
 
-  err = clSetKernelArg(kernel, 0, sizeof(cl_mem), &in_out_device_object);
+  err = clSetKernelArg(kernel, 0, sizeof(cl_mem), &in_device_object);
   cl_error(err, "Failed to set argument 0\n");
-  err = clSetKernelArg(kernel, 1, sizeof(unsigned int), &ancho);
+  err = clSetKernelArg(kernel, 1, sizeof(cl_mem), &out_device_object);
   cl_error(err, "Failed to set argument 1\n");
-  err = clSetKernelArg(kernel, 2, sizeof(unsigned int), &alto);
+  err = clSetKernelArg(kernel, 2, sizeof(unsigned int), &ancho);
   cl_error(err, "Failed to set argument 2\n");
+  err = clSetKernelArg(kernel, 3, sizeof(unsigned int), &alto);
+  cl_error(err, "Failed to set argument 3\n");
+  err = clSetKernelArg(kernel, 4, sizeof(float), &angle);
+  cl_error(err, "Failed to set argument 4\n");
+  err = clSetKernelArg(kernel, 5, sizeof(int), &x0);
+  cl_error(err, "Failed to set argument 5\n");
+  err = clSetKernelArg(kernel, 6, sizeof(int), &y0);
+  cl_error(err, "Failed to set argument 6\n");
 
 
   // Launch Kernel
   local_size = 128;
-  size_t global_size[3] = {alto, ancho/2, 3};  
+  size_t global_size[3] = {alto, ancho, 3};  
   err = clEnqueueNDRangeKernel(command_queue, kernel, 3, NULL, global_size, NULL, 0, NULL, NULL);
   cl_error(err, "Failed to launch kernel to the device\n");
 
+unsigned char* imgOUT = new unsigned char[sizeof(unsigned char) * alto * ancho * 3];
   // Read data form device memory back to host memory
+
+  clFinish(command_queue);
+    printf("piola\n");
   
-  err = clEnqueueReadBuffer(command_queue, in_out_device_object, CL_TRUE, 0, sizeof(unsigned char) * alto * ancho * 3, img, 0, NULL, NULL);
-  printf("piola\n");
+  err = clEnqueueReadBuffer(command_queue, out_device_object, CL_TRUE, 0, sizeof(unsigned char) * alto * ancho * 3, imgOUT, 0, NULL, NULL);
+  printf("LEIDA piola\n");
   cl_error(err, "Failed to enqueue a read command\n");
+
+    for (int i = 0; i < ancho * alto*3; ++i) {
+        ptrImagen[i] = static_cast<unsigned char>(imgOUT[i]);
+    }
 
   if(display){
 
@@ -181,7 +204,8 @@ int main(int argc, char** argv)
   }
 
 
-  clReleaseMemObject(in_out_device_object);
+  clReleaseMemObject(in_device_object);
+  clReleaseMemObject(out_device_object);
   clReleaseProgram(program);
   clReleaseKernel(kernel);
   clReleaseCommandQueue(command_queue);

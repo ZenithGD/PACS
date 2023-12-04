@@ -5,12 +5,12 @@
 //
 // 
 ////////////////////////////////////////////////////////////////////
-
+#define cimg_use_jpeg
+#include <iostream>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <iostream>
 #include <math.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -20,10 +20,10 @@
 #else
   #include <CL/cl.h>
 #endif
-#include "CImg.h"
+#include <CImg.h>
 
 using namespace cimg_library;
-using namespace std;
+  
 // check error, in such a case, it exits
 
 void cl_error(cl_int code, const char *string){
@@ -36,6 +36,11 @@ void cl_error(cl_int code, const char *string){
 
 int main(int argc, char** argv)
 {
+  if ( argc < 2 ) {
+    std::cout << "Usage: flip <image_path>" << std::endl;
+    exit(1);
+  }
+
   int err;                            	// error code returned from api calls
   size_t t_buf = 50;			// size of str_buffer
   char str_buffer[t_buf];		// auxiliary buffer	
@@ -61,8 +66,6 @@ int main(int argc, char** argv)
   cl_error(err, "Error: Failed to Scan for Platforms IDs");
   printf("Number of available platforms: %d\n\n", n_platforms);
 
-  // ***Task***: print on the screen the name, host_timer_resolution, vendor, versionm, ...
-	
   //2. Scan for devices in each platform
   for (int i = 0; i < n_platforms; i++ ){
     err = clGetDeviceIDs( platforms_ids[i], CL_DEVICE_TYPE_ALL ,num_devices_ids, devices_ids[i], &(n_devices[i]));
@@ -81,7 +84,7 @@ int main(int argc, char** argv)
   cl_error(err, "Failed to create a command queue\n");
 
   // Calculate size of the file
-  FILE *fileHandler = fopen("rot_kernel.cl", "r");
+  FILE *fileHandler = fopen("image-flip/flip_kernel.cl", "r");
   fseek(fileHandler, 0, SEEK_END);
   size_t fileSize = ftell(fileHandler);
   rewind(fileHandler);
@@ -116,11 +119,10 @@ int main(int argc, char** argv)
   clGetProgramBuildInfo(program, devices_ids[0][0], CL_PROGRAM_BUILD_LOG, sizeof(buffer), &buffer, NULL);
   printf("%s\n", buffer);
 
-  cl_kernel kernel = clCreateKernel(program, "rot", &err);
+  cl_kernel kernel = clCreateKernel(program, "flip", &err);
   cl_error(err, "Failed to create kernel from the program\n");
 
-  //CREAR LAS VARIABLES QUE USARA EL KERNEL
-  CImg<unsigned char> img("pomni.jpg");  // Load image file "image.jpg" at object img
+  CImg<unsigned char> img(argv[1]);  // Load image file
 
   size_t ancho = img.width();
   size_t alto = img.height();
@@ -133,16 +135,26 @@ int main(int argc, char** argv)
     while (!ventana.is_closed()) {
         // Esperar a eventos en la ventana
         ventana.wait();
+
+        // Verificar si se hizo clic en un píxel
+        if (ventana.button()) {
+            // Obtener las coordenadas del clic
+            int x = ventana.mouse_x();
+            int y = ventana.mouse_y();
+
+            // Imprimir el valor de los canales RGB del píxel clickeado
+            unsigned char r = img(x, y, 0);
+            unsigned char g = img(x, y, 1);
+            unsigned char b = img(x, y, 2);
+
+            printf("Valor del píxel en la posición (%d, %d): R=%d, G=%d, B=%d\n", x, y, r, g, b);
+        }
     }
   }
 
   unsigned char* ptrImagen = img.data(); // YA tenemos el puntero a la imagen
 
-  float angle = M_PI/4.0;
-  int x0 = alto/2;
-  int y0 = ancho/2;
-
-  cout << "ALTO: " << x0 << ". ANCHO: " << y0 << endl;
+  
 
   // Create OpenCL buffer visible to the OpenCl runtime
   cl_mem in_device_object  = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(unsigned char) * alto * ancho * 3, NULL, &err);
@@ -165,28 +177,19 @@ int main(int argc, char** argv)
   cl_error(err, "Failed to set argument 2\n");
   err = clSetKernelArg(kernel, 3, sizeof(unsigned int), &alto);
   cl_error(err, "Failed to set argument 3\n");
-  err = clSetKernelArg(kernel, 4, sizeof(float), &angle);
-  cl_error(err, "Failed to set argument 4\n");
-  err = clSetKernelArg(kernel, 5, sizeof(int), &x0);
-  cl_error(err, "Failed to set argument 5\n");
-  err = clSetKernelArg(kernel, 6, sizeof(int), &y0);
-  cl_error(err, "Failed to set argument 6\n");
 
 
   // Launch Kernel
   local_size = 128;
-  size_t global_size[3] = {alto, ancho, 3};  
+  size_t global_size[3] = {alto, ancho/2, 3};  
   err = clEnqueueNDRangeKernel(command_queue, kernel, 3, NULL, global_size, NULL, 0, NULL, NULL);
   cl_error(err, "Failed to launch kernel to the device\n");
 
 unsigned char* imgOUT = new unsigned char[sizeof(unsigned char) * alto * ancho * 3];
   // Read data form device memory back to host memory
-
-  clFinish(command_queue);
-    printf("piola\n");
   
   err = clEnqueueReadBuffer(command_queue, out_device_object, CL_TRUE, 0, sizeof(unsigned char) * alto * ancho * 3, imgOUT, 0, NULL, NULL);
-  printf("LEIDA piola\n");
+  printf("piola\n");
   cl_error(err, "Failed to enqueue a read command\n");
 
     for (int i = 0; i < ancho * alto*3; ++i) {

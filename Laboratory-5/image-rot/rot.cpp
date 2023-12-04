@@ -1,7 +1,7 @@
 #define cimg_use_jpeg
 #include <iostream>
 #include <math.h>
-#include "CImg.h"
+#include <CImg.h>
 using namespace cimg_library;
 using namespace std;
 
