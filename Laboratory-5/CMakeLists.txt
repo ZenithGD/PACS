@@ -21,7 +21,7 @@ message(STATUS "JPEG_FOUND = ${JPEG_FOUND}")
 message(STATUS "JPEG_INCLUDE_DIRS = ${JPEG_INCLUDE_DIRS}")
 message(STATUS "JPEG_LIBRARIES = ${JPEG_LIBRARIES}")
 
-#add_subdirectory(histogram)
+add_subdirectory(histogram)
 add_subdirectory(image-flip)
 #add_subdirectory(image-rot)
 #add_subdirectory(examples)
