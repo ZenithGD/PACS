@@ -54,7 +54,7 @@ public:
     {
         std::unique_lock<std::mutex> lock(_m);
         _empty.wait(lock, [=]{return !_q.empty(); });
-        std::shared_ptr<T> value(_q.front());
+        std::shared_ptr<T> value = std::make_shared<T>(_q.front());
         _q.pop();
         return value;
     }

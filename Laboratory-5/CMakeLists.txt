@@ -23,7 +23,7 @@ message(STATUS "JPEG_LIBRARIES = ${JPEG_LIBRARIES}")
 
 add_subdirectory(histogram)
 add_subdirectory(image-flip)
-#add_subdirectory(image-rot)
+add_subdirectory(image-rot)
 #add_subdirectory(examples)
 
 if (CMAKE_GENERATOR STREQUAL "Ninja")

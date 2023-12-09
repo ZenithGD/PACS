@@ -8,7 +8,7 @@ public:
     nb_queue() : _head(new node_t), _tail(_head.load().ptr) {}
 
     // enqueue
-    void enqueue(const ValueType& v) {
+    void push(const ValueType& v) {
         pointer_t tail;
         // E1, E2, E3 node initialization
         node_t* node = new node_t(v);
@@ -39,7 +39,7 @@ public:
         _tail.compare_exchange_strong(tail, pointer_t(node, tail.count + 1));
     }
 
-    bool dequeue(ValueType* pvalue) {
+    bool try_pop(ValueType& pvalue) {
         pointer_t head;
         // D1. Keep trying until Dequeue is done
         while ( true ) {
@@ -64,7 +64,7 @@ public:
                 // D11.No need to deal with Tail
                 else {
                     // D12. Read value before CAS, otherwise another dequeue might free the next node
-                    *pvalue = next.ptr->value;
+                    pvalue = next.ptr->value;
                     // D13. Try to swing Head to the next node
                     if ( _head.compare_exchange_strong(head, pointer_t(next.ptr, head.count + 1)) ) {
                         // D14-D18. Dequeue is done. Exit loop
@@ -76,6 +76,7 @@ public:
         delete head.ptr;
         return true;
     }
+
 private:
     struct node_t;
 

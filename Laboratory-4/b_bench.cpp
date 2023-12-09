@@ -2,9 +2,9 @@
 #include <thread>
 #include <vector>
 
-#include <nonblocking_queue.hpp>
+#include <threadsafe_queue.hpp>
 
-void thread_fn(nb_queue<int>& q, unsigned int n) {
+void thread_fn(threadsafe_queue<int>& q, unsigned int n) {
     for ( unsigned int i = 0; i < n; i++ ) {
         int val;
         bool pop = q.try_pop(val);
@@ -14,31 +14,16 @@ void thread_fn(nb_queue<int>& q, unsigned int n) {
 
 int main(int argc, char** argv) {
     if ( argc < 3 ) {
-        std::cout << "usage: ./nb_bench N T" << std::endl;
+        std::cout << "usage: ./b_bench N T" << std::endl;
         return 1;
     }
 
     unsigned int n_push = std::stoi(argv[1]);
     unsigned int n_thread = std::stoi(argv[2]);
 
-    // non blocking queue test implementation correctness
-    nb_queue<int> q;
-    const int ntest = 10;
-    for ( int i = 0; i < ntest; i++ ) {
-        q.push(i);
-    }
-
-    int v = -1;
-    for ( int i = 0; i < ntest; i++ ) {
-        q.try_pop(v);
-        if ( v != i ) {
-            std::cout << "expected v = " << i << ", got " << v << std::endl;
-            exit(1); 
-        }
-    }
-    q.try_pop(v);
-
-    if ( v != 3 ) 
+    // non blocking queue
+    threadsafe_queue<int> q;
+    q.push(1);
 
     std::cout << "starting benchmark" << std::endl;
     std::vector<std::thread> threads;
