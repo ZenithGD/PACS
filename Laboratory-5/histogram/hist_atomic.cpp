@@ -265,7 +265,7 @@ measurement_info run_experiment(char *input, char *output, bool store)
   double dtoh_bw = (r_size + g_size + b_size) / (kernel_nano / 1000000000.0);
   double htod_bw = (in_size + r_size + g_size + b_size) / (kernel_nano / 1000000000.0);
   // throughput (work per second)
-  double throughput = 1000000000.0 / total_nano;
+  double throughput = 1000000000.0 / kernel_nano;
 
   clReleaseMemObject(in_device_object);
   clReleaseMemObject(r_in_out);
