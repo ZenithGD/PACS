@@ -1,9 +1,9 @@
 ////////////////////////////////////////////////////////////////////
-//File: basic_environ.c
+// File: basic_environ.c
 //
-//Description: base file for environment exercises with openCL
+// Description: base file for environment exercises with openCL
 //
-// 
+//
 ////////////////////////////////////////////////////////////////////
 #define cimg_use_jpeg
 #include <fcntl.h>
@@ -12,35 +12,40 @@
 #include <string.h>
 #include <math.h>
 #include <iostream>
+#include <iomanip>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #ifdef __APPLE__
-  #include <OpenCL/opencl.h>
+#include <OpenCL/opencl.h>
 #else
-  #include <CL/cl.h>
+#include <CL/cl.h>
 #endif
 #include "CImg.h"
 
+#include <chrono>
+#include "measurement_info.hpp"
+#include "plot_hist.hpp"
+
 using namespace cimg_library;
 using namespace std;
-  
+
 // check error, in such a case, it exits
 
-void cl_error(cl_int code, const char *string){
-	if (code != CL_SUCCESS){
-		printf("%d - %s\n", code, string);
-	    exit(-1);
-	}
+void cl_error(cl_int code, const char *string)
+{
+  if (code != CL_SUCCESS)
+  {
+    printf("%d - %s\n", code, string);
+    exit(-1);
+  }
 }
 ////////////////////////////////////////////////////////////////////////////////
 
-int main(int argc, char** argv)
+measurement_info run_experiment(char *input, char *output, bool store)
 {
-  if ( argc < 2 ) {
-    std::cout << "Usage: flip <image_path>" << std::endl;
-    exit(1);
-  }
+
+  auto prog_ini = std::chrono::steady_clock().now();
 
   int err;                            	// error code returned from api calls
   size_t t_buf = 50;			// size of str_buffer
@@ -126,21 +131,10 @@ int main(int argc, char** argv)
   cl_error(err, "Failed to create kernel from the program\n");
 
   //CREAR LAS VARIABLES QUE USARA EL KERNEL
-  CImg<unsigned char> img(argv[1]);  // Load image file "image.jpg" at object img
+  CImg<unsigned char> img(input);  // Load image file "image.jpg" at object img
 
   size_t width = img.width();
   size_t height = img.height();
-
-  bool display = true;
-  if(display){
-
-    CImgDisplay window(img, "Imagen");
-
-    while (!window.is_closed()) {
-        // Esperar a eventos en la window
-        window.wait();
-    }
-  }
 
   unsigned char* ptrImagen = img.data();
 
@@ -186,9 +180,9 @@ int main(int argc, char** argv)
 
 
   // Launch Kernel
-  local_size = 128;
+  cl_event event;
   size_t global_size[3] = {height, width, 3};  
-  err = clEnqueueNDRangeKernel(command_queue, kernel, 3, NULL, global_size, NULL, 0, NULL, NULL);
+  err = clEnqueueNDRangeKernel(command_queue, kernel, 3, NULL, global_size, NULL, 0, NULL, &event);
   cl_error(err, "Failed to launch kernel to the device\n");
 
   err = clEnqueueReadBuffer(command_queue, r_in_out, CL_TRUE, 0, sizeof(int) * 256, r, 0, NULL, NULL);
@@ -197,98 +191,81 @@ int main(int argc, char** argv)
   cl_error(err, "Failed to enqueue G a read command\n");
   err = clEnqueueReadBuffer(command_queue, b_in_out, CL_TRUE, 0, sizeof(int) * 256, b, 0, NULL, NULL);
   cl_error(err, "Failed to enqueue B a read command\n");
-  printf("piola\n");
 
-  int rmax = 0;
-  int gmax = 0;
-  int bmax = 0;
-  float rh[256] = {0};
-  float gh[256] = {0};
-  float bh[256] = {0};
-  for(int i = 0; i < 256; i++){
-      if(r[i] > rmax){
-          rmax = r[i];
-      } 
-      if(g[i] > gmax){
-          gmax = g[i];
-      }
-      if(b[i] > bmax){
-          bmax = b[i];
-      }
-  }
-  for(int i = 0; i < 256; i++){
-      rh[i] = rmax > 0 ? (float)r[i] / (float)rmax : 0;
-      gh[i] = gmax > 0 ? (float)g[i] / (float)gmax : 0;
-      bh[i] = bmax > 0 ? (float)b[i] / (float)bmax : 0;
-  }
-  
-  for(int i = 0; i < 10; i++){
-      cout << "R[" << i << "]: " << rh[i] << endl;
-  }
-
-  const int width_window = 800;
-  const int height_window = 500;
-
-  // Crear una imagen para las gráficas
-  CImg<unsigned char> grafica(width_window, height_window, 1, 3, 255);
-  unsigned char blue[] = { 0,0,255 };  
-  unsigned char red[] = { 255,0,0 };  
-  unsigned char green[] = { 0,255,0 };  
-  // Definir los valores en los ejes x e y
-  const int num_puntos = 256;
-  float valores_x[num_puntos];
-
-  // const float valores_y[num_puntos];
-  for(int i = 0; i < num_puntos; i++){
-      valores_x[i] = i;
-  }
-  int sum = width_window / 256;
-  float x2 = valores_x[0];
-  // Dibujar la gráfica
-  for (int i = 0; i < num_puntos; ++i) {
-      const float x1 = x2;
-      const float y1 = height_window * (1 - rh[i]);
-      x2 = x2 + sum;
-      const float y2 = height_window * (1 - rh[i + 1]);
-
-      // cout << "x1: " << x1 << ", y1: " << y1 << "| " << x2 << ", " << y2 << endl;
-      // cin.get();
-      grafica.draw_line(x1, y1, x2, y2, red);
-  }
-  x2 = 0;
-  for (int i = 0; i < num_puntos; ++i) {
-      const float x1 = x2;
-      const float y1 = height_window * (1 - gh[i]);
-      x2 = x2 + sum;
-      const float y2 = height_window * (1 - gh[i + 1]);
-
-      // cout << "x1: " << x1 << ", y1: " << y1 << "| " << x2 << ", " << y2 << endl;
-      // cin.get();
-      grafica.draw_line(x1, y1, x2, y2, green);
-  }
-  x2 = 0;
-  for (int i = 0; i < num_puntos; ++i) {
-      const float x1 = x2;
-      const float y1 = height_window * (1 - bh[i]);
-      x2 = x2 + sum;
-      const float y2 = height_window * (1 - bh[i + 1]);
-
-      // cout << "x1: " << x1 << ", y1: " << y1 << "| " << x2 << ", " << y2 << endl;
-      // cin.get();
-      grafica.draw_line(x1, y1, x2, y2, blue);
-  }
-
-  // Mostrar la imagen con la gráfica
-  CImgDisplay windowGR(grafica, "Gráfica con CImg");
-
-  while (!windowGR.is_closed())
-    {
-        // Esperar a eventos en la window
-        windowGR.wait();
+  if ( store ) {
+    int rmax = 0;
+    int gmax = 0;
+    int bmax = 0;
+    float rh[256] = {0};
+    float gh[256] = {0};
+    float bh[256] = {0};
+    for(int i = 0; i < 256; i++){
+        if(r[i] > rmax){
+            rmax = r[i];
+        } 
+        if(g[i] > gmax){
+            gmax = g[i];
+        }
+        if(b[i] > bmax){
+            bmax = b[i];
+        }
     }
+    for(int i = 0; i < 256; i++){
+        rh[i] = rmax > 0 ? (float)r[i] / (float)rmax : 0;
+        gh[i] = gmax > 0 ? (float)g[i] / (float)gmax : 0;
+        bh[i] = bmax > 0 ? (float)b[i] / (float)bmax : 0;
+    }
+    Histogram hist_r(rh), hist_g(gh), hist_b(bh);
 
-  
+    unsigned int width = 800, height = 600;
+    CImg<unsigned char> canvas(width, height, 1, 3, 255);
+    
+    unsigned char red[] = {255, 0, 0}; 
+    hist_r.display(canvas, width, height, red);
 
+    unsigned char green[] = {0, 255, 0}; 
+    hist_g.display(canvas, width, height, green);
+
+    unsigned char blue[] = {0, 0, 255}; 
+    hist_b.display(canvas, width, height, blue);
+
+    canvas.save(output);
+  }
+
+  auto prog_end = std::chrono::steady_clock().now();
+
+  // display measurements
+
+  // execution time of the whole program
+  double total_nano = std::chrono::duration_cast<std::chrono::nanoseconds>(prog_end - prog_ini).count();
+
+  // kernel execution time
+  cl_ulong time_start;
+  cl_ulong time_end;
+  clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_START, sizeof(time_start),
+                          &time_start, NULL);
+  clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END, sizeof(time_end), &time_end,
+                          NULL);
+  double kernel_nano = time_end - time_start;
+  // memory footprint
+  double host_mem = 256 * img.spectrum() * sizeof(unsigned int) + img.width() * img.height() * img.spectrum() * sizeof(unsigned char);
+
+  size_t in_size;
+  err = clGetMemObjectInfo(in_device_object, CL_MEM_SIZE, sizeof(in_size), &in_size, NULL);
+  size_t r_size;
+  err = clGetMemObjectInfo(r_in_out, CL_MEM_SIZE, sizeof(r_size), &r_size, NULL);
+  size_t g_size;
+  err = clGetMemObjectInfo(g_in_out, CL_MEM_SIZE, sizeof(g_size), &g_size, NULL);
+  size_t b_size;
+  err = clGetMemObjectInfo(b_in_out, CL_MEM_SIZE, sizeof(b_size), &b_size, NULL);
+  std::cout << in_size << ", " << r_size << ", " << g_size << ", " << b_size << std::endl;
+  double dev_global_mem = in_size + r_size + g_size + b_size;
+  double dev_local_mem = 0;
+  // bandwidth (DtoH, HtoD)
+  double dtoh_bw = (r_size + g_size + b_size) / (kernel_nano / 1000000000.0);
+  double htod_bw = (in_size + r_size + g_size + b_size) / (kernel_nano / 1000000000.0);
+  // throughput (work per second)
+  double throughput = 1000000000.0 / total_nano;
 
   clReleaseMemObject(in_device_object);
   clReleaseMemObject(r_in_out);
@@ -298,6 +275,49 @@ int main(int argc, char** argv)
   clReleaseKernel(kernel);
   clReleaseCommandQueue(command_queue);
   clReleaseContext(context);
-  return 0;
+
+  return measurement_info {
+    .total_time = total_nano / 1000000.0,
+    .kernel_time = kernel_nano / 1000000.0,
+    .dtoh_bw = dtoh_bw / 1024.0,
+    .htod_bw = htod_bw / 1024.0,
+    .tasks_per_sec = throughput,
+    .host_fp = host_mem / 1024.0,
+    .device_global_fp = dev_global_mem / 1024.0,
+    .device_local_fp = dev_local_mem / 1024.0
+  };
 }
 
+int main(int argc, char **argv)
+{
+  if (argc < 3)
+  {
+    std::cout << "Usage: flip <image_path> <out_path>" << std::endl;
+    exit(1);
+  }
+
+  int reps = 1;
+  bool store = true;
+  if (argc == 4) {
+    // if number of experiments is specified, don't store histogram result
+    reps = std::stoi(argv[3]);
+    store = false;
+  }
+
+  // average measurements
+  measurement_info avg;
+  for ( int i = 0; i < reps; i++ ) {
+    measurement_info experiment = run_experiment(argv[1], argv[2], store);
+    avg += experiment;
+    std::cout << "\e[0;32m[Iteration " << i << " / " << reps << "]\e[0m" << std::endl;
+    std::cout << experiment << std::endl;
+    std::cout << "[--------------------------]" << std::endl;
+  }
+  
+  avg /= double(reps);
+  
+  // show measurements
+  std::cout << "Average measurements: " << std::endl;
+  std::cout << avg << std::endl;
+  return 0;
+}
