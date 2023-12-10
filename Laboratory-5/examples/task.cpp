@@ -20,10 +20,10 @@ int main(){
     const int y_inicio = alto / 2;
     const int x_fin = ancho - 1;
     const int y_fin = alto / 2;
-    unsigned char* ptrImagen = img.data(); // YA tenemos el puntero a la imagen
-    unsigned char* imgOUT = new unsigned char[sizeof(unsigned char) * alto * ancho * 3];
+    unsigned char* image_ptr = img.data(); 
+    unsigned char* img_out = new unsigned char[sizeof(unsigned char) * alto * ancho * 3];
     for(int i = 0; i < 9; i++){
-      printf("COLOR:%d\n", ptrImagen[i]);
+      printf("COLOR:%d\n", image_ptr[i]);
     } 
     int fils = alto;
     int cols = ancho;
@@ -35,22 +35,22 @@ int main(){
     for(int i = 0; i < alto; i++){
       for(int j = 0; j < ancho/2; j++){
         for(int k=0; k < 3; k++){
-          imgOUT[fils*cols*k +  i * cols + j ] = ptrImagen[fils*cols*k +  i * cols + cols -j -1 ];
-          imgOUT[fils*cols*k +  i * cols + cols -j -1  ] = ptrImagen[fils*cols*k +  i * cols + j ];
+          img_out[fils*cols*k +  i * cols + j ] = image_ptr[fils*cols*k +  i * cols + cols -j -1 ];
+          img_out[fils*cols*k +  i * cols + cols -j -1  ] = image_ptr[fils*cols*k +  i * cols + j ];
         }
       }
     }
     for (int i = 0; i < ancho * alto*3; ++i) {
-        ptrImagen[i] = static_cast<unsigned char>(imgOUT[i]);
+        image_ptr[i] = static_cast<unsigned char>(img_out[i]);
     }
 
 
-    CImgDisplay ventana(img, "Imagen");
+    CImgDisplay window(img, "Image");
     
 
-    while (!ventana.is_closed()) {
-        // Esperar a eventos en la ventana
-        ventana.wait();
+    while (!window.is_closed()) {
+        // Wait for window events
+        window.wait();
     }
 
   return 0;

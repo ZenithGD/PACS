@@ -16,7 +16,7 @@ histograma_r = cv2.calcHist([canal_r], [0], None, [256], [0, 256])
 # Mostrar la imagen y los histogramas
 plt.subplot(4, 1, 1)
 plt.imshow(cv2.cvtColor(imagen, cv2.COLOR_BGR2RGB))
-plt.title('Imagen')
+plt.title('Image')
 
 plt.subplot(4, 1, 2)
 plt.plot(histograma_b, color='blue')

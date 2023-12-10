@@ -1,3 +1,8 @@
+#pragma OPENCL EXTENSION cl_khr_global_int32_base_atomics: enable
+#pragma OPENCL EXTENSION cl_khr_global_int32_extended_atomics: enable
+#pragma OPENCL EXTENSION cl_khr_local_int32_base_atomics: enable
+#pragma OPENCL EXTENSION cl_khr_local_int32_extended_atomics: enable
+
 __kernel void hist_tile(
   __global uchar *img,
   __global int* r,

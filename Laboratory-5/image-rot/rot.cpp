@@ -19,13 +19,13 @@ int main(){
     
     const int ancho = img.width();
     const int alto = img.height();
-    unsigned char* ptrImagen = img.data(); 
+    unsigned char* image_ptr = img.data(); 
 
     float angle = 0;
     int x0 = alto/2;
     int y0 = ancho/2;
 
-    unsigned char* imgOUT = new unsigned char[sizeof(unsigned char) * alto * ancho * 3];
+    unsigned char* img_out = new unsigned char[sizeof(unsigned char) * alto * ancho * 3];
     for(int i = 0; i < alto; i++){
         for(int j = 0; j < ancho; j++){
             
@@ -42,7 +42,7 @@ int main(){
                 y2 = y2 - 1;
             }
             for(int k = 0; k < 3; k++){
-                imgOUT[alto*ancho*k +  i * ancho + j ] = img[alto*ancho*k +  x2 * ancho + y2];
+                img_out[alto*ancho*k +  i * ancho + j ] = img[alto*ancho*k +  x2 * ancho + y2];
             }
         }
     }
@@ -50,12 +50,12 @@ int main(){
 
 
     for (int i = 0; i < ancho * alto*3; ++i) {
-        ptrImagen[i] = static_cast<unsigned char>(imgOUT[i]);
+        image_ptr[i] = static_cast<unsigned char>(img_out[i]);
     }
-    CImgDisplay ventana(img, "Imagen");
-    while (!ventana.is_closed()) {
-        // Esperar a eventos en la ventana
-        ventana.wait();
+    CImgDisplay window(img, "Image");
+    while (!window.is_closed()) {
+        // Wait for window events
+        window.wait();
     }
 
   return 0;

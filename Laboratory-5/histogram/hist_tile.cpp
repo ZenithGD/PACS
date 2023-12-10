@@ -126,7 +126,7 @@ measurement_info run_experiment(char *input, char *output, bool store)
   size_t width = img.width();
   size_t height = img.height();
 
-  unsigned char *ptrImagen = img.data();
+  unsigned char *image_ptr = img.data();
 
   unsigned int csize = 256;
   unsigned int ncells = img.height() * img.width() / csize + img.height() * img.width() % csize == 0 ? 1 : 0;
@@ -146,7 +146,7 @@ measurement_info run_experiment(char *input, char *output, bool store)
 
   // Write date into the memory object
   err = clEnqueueWriteBuffer(command_queue, in_device_object, CL_TRUE, 0, sizeof(unsigned char) * height * width * 3,
-                             ptrImagen, 0, NULL, NULL);
+                             image_ptr, 0, NULL, NULL);
   err = clEnqueueWriteBuffer(command_queue, r_in_out, CL_TRUE, 0, sizeof(int) * 256,
                              r, 0, NULL, NULL);
   err = clEnqueueWriteBuffer(command_queue, g_in_out, CL_TRUE, 0, sizeof(int) * 256,
@@ -267,7 +267,7 @@ measurement_info run_experiment(char *input, char *output, bool store)
   err = clGetMemObjectInfo(b_in_out, CL_MEM_SIZE, sizeof(b_size), &b_size, NULL);
   std::cout << in_size << ", " << r_size << ", " << g_size << ", " << b_size << std::endl;
   double dev_global_mem = in_size + r_size + g_size + b_size;
-  double dev_local_mem = 256 * sizeof(unsigned int) * img.spectrum();
+  double dev_local_mem = 256 * sizeof(unsigned int) * img.spectrum() * csize;
   // bandwidth (DtoH, HtoD)
   double dtoh_bw = (r_size + g_size + b_size) / (kernel_nano / 1000000000.0);
   double htod_bw = (in_size + r_size + g_size + b_size) / (kernel_nano / 1000000000.0);

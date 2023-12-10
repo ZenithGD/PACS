@@ -201,7 +201,7 @@ int main(int argc, char** argv)
 
 
   // Launch Kernel
-  local_size = 128;
+  
   global_size = count;
   err = clEnqueueNDRangeKernel(command_queue, kernel, 1, NULL, &global_size, &local_size, 0, NULL, NULL);
   cl_error(err, "Failed to launch kernel to the device\n");

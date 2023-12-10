@@ -136,7 +136,7 @@ measurement_info run_experiment(char *input, char *output, bool store)
   size_t width = img.width();
   size_t height = img.height();
 
-  unsigned char* ptrImagen = img.data();
+  unsigned char* image_ptr = img.data();
 
   int r[256] = {0};
   int g[256] = {0};
@@ -155,7 +155,7 @@ measurement_info run_experiment(char *input, char *output, bool store)
 
    // Write date into the memory object 
   err = clEnqueueWriteBuffer(command_queue, in_device_object, CL_TRUE, 0, sizeof(unsigned char) * height * width * 3, 
-                            ptrImagen, 0, NULL, NULL);
+                            image_ptr, 0, NULL, NULL);
   err = clEnqueueWriteBuffer(command_queue, r_in_out, CL_TRUE, 0, sizeof(int) * 256, 
                             r, 0, NULL, NULL);
   err = clEnqueueWriteBuffer(command_queue, g_in_out, CL_TRUE, 0, sizeof(int) * 256, 

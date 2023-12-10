@@ -130,29 +130,28 @@ int main(int argc, char** argv)
   bool display = true;
   if(display){
 
-    CImgDisplay ventana(img, "Imagen");
+    CImgDisplay window(img, "Image");
 
-    while (!ventana.is_closed()) {
-        // Esperar a eventos en la ventana
-        ventana.wait();
+    while (!window.is_closed()) {
+        // Wait for window events
+        window.wait();
 
-        // Verificar si se hizo clic en un píxel
-        if (ventana.button()) {
-            // Obtener las coordenadas del clic
-            int x = ventana.mouse_x();
-            int y = ventana.mouse_y();
+        // Check for pixel click
+        if (window.button()) {
+            int x = window.mouse_x();
+            int y = window.mouse_y();
 
             // Imprimir el valor de los canales RGB del píxel clickeado
             unsigned char r = img(x, y, 0);
             unsigned char g = img(x, y, 1);
             unsigned char b = img(x, y, 2);
 
-            printf("Valor del píxel en la posición (%d, %d): R=%d, G=%d, B=%d\n", x, y, r, g, b);
+            printf("Pixel value at position (%d, %d): R=%d, G=%d, B=%d\n", x, y, r, g, b);
         }
     }
   }
 
-  unsigned char* ptrImagen = img.data(); // YA tenemos el puntero a la imagen
+  unsigned char* image_ptr = img.data(); 
 
   
 
@@ -165,7 +164,7 @@ int main(int argc, char** argv)
 
    // Write date into the memory object 
   err = clEnqueueWriteBuffer(command_queue, in_device_object, CL_TRUE, 0, sizeof(unsigned char) * alto * ancho * 3, 
-                            ptrImagen, 0, NULL, NULL);
+                            image_ptr, 0, NULL, NULL);
   cl_error(err, "Failed to enqueue a write command\n");
 
 
@@ -180,29 +179,27 @@ int main(int argc, char** argv)
 
 
   // Launch Kernel
-  local_size = 128;
   size_t global_size[3] = {alto, ancho/2, 3};  
   err = clEnqueueNDRangeKernel(command_queue, kernel, 3, NULL, global_size, NULL, 0, NULL, NULL);
   cl_error(err, "Failed to launch kernel to the device\n");
 
-unsigned char* imgOUT = new unsigned char[sizeof(unsigned char) * alto * ancho * 3];
+unsigned char* img_out = new unsigned char[sizeof(unsigned char) * alto * ancho * 3];
   // Read data form device memory back to host memory
   
-  err = clEnqueueReadBuffer(command_queue, out_device_object, CL_TRUE, 0, sizeof(unsigned char) * alto * ancho * 3, imgOUT, 0, NULL, NULL);
-  printf("piola\n");
+  err = clEnqueueReadBuffer(command_queue, out_device_object, CL_TRUE, 0, sizeof(unsigned char) * alto * ancho * 3, img_out, 0, NULL, NULL);
+
   cl_error(err, "Failed to enqueue a read command\n");
 
     for (int i = 0; i < ancho * alto*3; ++i) {
-        ptrImagen[i] = static_cast<unsigned char>(imgOUT[i]);
+        image_ptr[i] = static_cast<unsigned char>(img_out[i]);
     }
 
   if(display){
 
-    CImgDisplay ventana(img, "Imagen");
-
-    while (!ventana.is_closed()) {
-        // Esperar a eventos en la ventana
-        ventana.wait();
+    CImgDisplay window(img, "Image");
+    while (!window.is_closed()) {
+        // Wait for window events
+        window.wait();
     }
   }
 

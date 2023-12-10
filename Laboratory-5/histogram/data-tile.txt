@@ -1,12 +1,12 @@
 Average measurements: 
-Program execution time : 144.9 milliseconds.
-Kernel execution time: 6.174 milliseconds.
+Program execution time : 150 milliseconds.
+Kernel execution time: 6.171 milliseconds.
 Bandwidth: 
-  Host to device: 2847453.5 KiB/s.
-  Device to host: 485.88247 KiB/s.
-Throughput: 6.944 tasks/s
+  Host to device: 2848773 KiB/s.
+  Device to host: 486.10762 KiB/s.
+Throughput: 6.74 tasks/s
 Memory footprint 
   Host: 17581.125 KiB.
   Device:
     Global: 17581.125 KiB.
-    Local: 3 KiB.
+    Local: 768 KiB.

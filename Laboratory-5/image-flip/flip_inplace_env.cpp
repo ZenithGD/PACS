@@ -134,15 +134,15 @@ int main(int argc, char** argv)
   bool display = true;
   if(display){
 
-    CImgDisplay ventana(img, "Imagen");
+    CImgDisplay window(img, "Image");
 
-    while (!ventana.is_closed()) {
-        // Esperar a eventos en la ventana
-        ventana.wait();
+    while (!window.is_closed()) {
+        // Wait for window events
+        window.wait();
     }
   }
 
-  unsigned char* ptrImagen = img.data(); // YA tenemos el puntero a la imagen
+  unsigned char* image_ptr = img.data(); 
 
   
 
@@ -153,7 +153,7 @@ int main(int argc, char** argv)
 
    // Write date into the memory object 
   err = clEnqueueWriteBuffer(command_queue, in_out_device_object, CL_TRUE, 0, sizeof(unsigned char) * alto * ancho * 3, 
-                            ptrImagen, 0, NULL, NULL);
+                            image_ptr, 0, NULL, NULL);
   cl_error(err, "Failed to enqueue a write command\n");
 
 
@@ -166,7 +166,7 @@ int main(int argc, char** argv)
 
 
   // Launch Kernel
-  local_size = 128;
+  
   size_t global_size[3] = {alto, ancho/2, 3};  
   err = clEnqueueNDRangeKernel(command_queue, kernel, 3, NULL, global_size, NULL, 0, NULL, NULL);
   cl_error(err, "Failed to launch kernel to the device\n");
@@ -174,16 +174,16 @@ int main(int argc, char** argv)
   // Read data form device memory back to host memory
   
   err = clEnqueueReadBuffer(command_queue, in_out_device_object, CL_TRUE, 0, sizeof(unsigned char) * alto * ancho * 3, img, 0, NULL, NULL);
-  printf("piola\n");
+
   cl_error(err, "Failed to enqueue a read command\n");
 
   if(display){
 
-    CImgDisplay ventana(img, "Imagen");
+    CImgDisplay window(img, "Image");
 
-    while (!ventana.is_closed()) {
-        // Esperar a eventos en la ventana
-        ventana.wait();
+    while (!window.is_closed()) {
+        // Wait for window events
+        window.wait();
     }
   }
 

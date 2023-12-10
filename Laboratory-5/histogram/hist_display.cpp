@@ -76,27 +76,27 @@ int main(int argc, char** argv)
     unsigned char blue[] = {0, 0, 255}; 
     hist_b.display(canvas, width, height, blue);
 
-    // Mostrar la gráfica en una ventana
-    CImgDisplay ventana(canvas, "Gráfica de Barras");
+    // Mostrar la gráfica en una window
+    CImgDisplay window(canvas, "Gráfica de Barras");
 
-    while (!ventana.is_closed())
+    while (!window.is_closed())
     {
-        // Esperar a eventos en la ventana
-        ventana.wait();
+        // Wait for window events
+        window.wait();
 
-        // // Verificar si se hizo clic en un píxel
-        // if (ventana.button())
+        // // Check for pixel click
+        // if (window.button())
         // {
         //     // Obtener las coordenadas del clic
-        //     int x = ventana.mouse_x();
-        //     int y = ventana.mouse_y();
+        //     int x = window.mouse_x();
+        //     int y = window.mouse_y();
 
         //     // Imprimir el valor de los canales RGB del píxel clickeado
         //     unsigned char r = img(x, y, 0);
         //     unsigned char g = img(x, y, 1);
         //     unsigned char b = img(x, y, 2);
 
-        //     printf("Valor del píxel en la posición (%d, %d): R=%d, G=%d, B=%d\n", x, y, r, g, b);
+        //     printf("Pixel value at position (%d, %d): R=%d, G=%d, B=%d\n", x, y, r, g, b);
         // }
     }
 
