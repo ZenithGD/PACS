@@ -1,0 +1,1 @@
+PATH=$PATH:./build/dist/bin
