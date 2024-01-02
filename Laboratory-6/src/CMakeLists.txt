@@ -4,6 +4,7 @@ add_executable(main
     schedulers/static_scheduler.cpp
 
     utils/clutils.cpp
+    utils/fileutils.cpp
 )
 
 # hist with two arrays

@@ -9,7 +9,7 @@ class StaticScheduler : public Scheduler {
          * Static scheduler with automatic workload distribution, 
          * based on the number of compute cores passed as argument and the underlying core clock frequency
         */
-        StaticScheduler(const std::vector<unsigned int>& cores);
+        StaticScheduler(const std::string& kernel_path, const std::string& kernel_name, const std::vector<unsigned int>& cores);
 
         /**
          * Static scheduler with preset workload distribution
@@ -17,10 +17,12 @@ class StaticScheduler : public Scheduler {
          * 
          * distribution will always be normalized to a discrete PDF
         */
-        StaticScheduler(const std::vector<double>& distr);
+        StaticScheduler(const std::string& kernel_path, const std::string& kernel_name, const std::vector<double>& distr);
 
-        void run(const std::unordered_map<std::string, unsigned int>& images) override;
+        void run(CImg<unsigned char>& img, unsigned int reps) override;
     private:
+
+        void run_subrange(CImg<unsigned char>& img, unsigned int idx, unsigned int lo, unsigned int hi);
 
         // actual fixed workload distribution
         std::vector<double> _distr;

@@ -73,13 +73,13 @@ measurement_info run_experiment(char *input, char *output, bool store)
   }
 
   // 3. Create a context, with a device
-  cl_context_properties properties[] = {CL_CONTEXT_PLATFORM, (cl_context_properties)platforms_ids[0], 0};
-  context = clCreateContext(properties, 1, devices_ids[0], NULL, NULL, &err);
+  cl_context_properties properties[] = {CL_CONTEXT_PLATFORM, (cl_context_properties)platforms_ids[1], 0};
+  context = clCreateContext(properties, 1, devices_ids[1], NULL, NULL, &err);
   cl_error(err, "Failed to create a compute context\n");
 
   // 4. Create a command queue
   cl_command_queue_properties proprt[] = {CL_QUEUE_PROPERTIES, CL_QUEUE_PROFILING_ENABLE, 0};
-  command_queue = clCreateCommandQueueWithProperties(context, devices_ids[0][0], proprt, &err);
+  command_queue = clCreateCommandQueueWithProperties(context, devices_ids[1][0], proprt, &err);
   cl_error(err, "Failed to create a command queue\n");
 
   // Calculate size of the file
@@ -103,19 +103,19 @@ measurement_info run_experiment(char *input, char *output, bool store)
   free(sourceCode);
 
   // Build the executable and check errors
-  err = clBuildProgram(program, 0, NULL, NULL, NULL, NULL);
+  err = clBuildProgram(program, 0, NULL, "-cl-std=CL2.0", NULL, NULL);
   char buffer[2048];
   if (err != CL_SUCCESS)
   {
     size_t len;
 
     printf("Error: Some error at building process.\n");
-    clGetProgramBuildInfo(program, devices_ids[0][0], CL_PROGRAM_BUILD_LOG, sizeof(buffer), &buffer, NULL);
+    clGetProgramBuildInfo(program, devices_ids[1][0], CL_PROGRAM_BUILD_LOG, sizeof(buffer), &buffer, NULL);
     printf("%s\n", buffer);
     exit(-1);
   }
   printf("SUCCESS\n");
-  clGetProgramBuildInfo(program, devices_ids[0][0], CL_PROGRAM_BUILD_LOG, sizeof(buffer), &buffer, NULL);
+  clGetProgramBuildInfo(program, devices_ids[1][0], CL_PROGRAM_BUILD_LOG, sizeof(buffer), &buffer, NULL);
   printf("%s\n", buffer);
 
   cl_kernel kernel = clCreateKernel(program, "hist_tile", &err);

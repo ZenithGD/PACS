@@ -153,7 +153,6 @@ int main(int argc, char** argv)
 
   unsigned char* image_ptr = img.data(); 
 
-  
 
   // Create OpenCL buffer visible to the OpenCl runtime
   cl_mem in_device_object  = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(unsigned char) * alto * ancho * 3, NULL, &err);

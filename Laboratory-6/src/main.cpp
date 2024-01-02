@@ -17,50 +17,30 @@ using namespace std;
 #include <schedulers/static_scheduler.hpp>
 
 struct Arguments {
-    std::unordered_map<std::string, unsigned int> image_paths;
-    std::string kernel;
+    std::string image_path;
+    unsigned int repl;
+    std::string kernel_path, kernel_name;
 };
 
 Arguments parse_args(int argc, char** argv) {
 
     if ( argc < 2 ) {
-        std::cerr << "Usage: main <kernel> [<image_path> (N)]" << std::endl;
+        std::cerr << "Usage: main <kernel_path> <kernel_name> <image_path> (N)" << std::endl;
         exit(1);
     }
 
     // get kernel arg
     Arguments args;
-    args.kernel = std::string(argv[1]);
-    for ( unsigned int i = 2; i < argc; i++ ) {
-        std::string _path(argv[i]);
-        if ( i < argc ) {
-            try {
-                // repeat path N times
-                unsigned int times = std::stoul(argv[i + 1]);
-                if ( !args.image_paths[_path] )
-                    args.image_paths[_path] = times;
-                else {
-                    args.image_paths[_path] += times;
-                }
-                i++;
-            }
-            catch ( std::exception& e ) {
-                // if argument is not a number we only push once
-                if ( !args.image_paths[_path] )
-                    args.image_paths[_path] = 1;
-                else {
-                    args.image_paths[_path]++;
-                }
-            }
-        }
+    args.kernel_path = std::string(argv[1]);
+    args.kernel_name = std::string(argv[2]);
+    args.image_path = std::string(argv[3]);
+    if ( argc > 3 ) {
+        args.repl = std::stoul(argv[4]);
     }
 
-    std::cout << "[kernel]> " << args.kernel << "" << std::endl;
-    std::cout << "[loaded paths]> " << std::endl;
-
-    for ( auto& [key, val] : args.image_paths ) {
-        std::cout << "  '" << key << "': " << val << std::endl;
-    }
+    std::cout << "[kernel_path]> " << args.kernel_path << std::endl;
+    std::cout << "[kernel_name]> " << args.kernel_name << std::endl;
+    std::cout << "[image_path]> " << args.image_path << " x " << args.repl << ::endl;
 
     return args;
 }
@@ -69,8 +49,11 @@ int main(int argc, char** argv) {
 
     Arguments args = parse_args(argc, argv);
     
-    std::vector<unsigned int> cores = {384, 24};
-    StaticScheduler sched(cores);
+    std::vector<unsigned int> cores = { 5,5 };
+    StaticScheduler sched(args.kernel_path, args.kernel_name, cores);
 
-    
+    CImg<unsigned char> img(args.image_path.c_str());
+    sched.run(img, args.repl);
+
+    sleep(2);
 }
