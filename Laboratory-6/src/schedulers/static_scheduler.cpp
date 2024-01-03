@@ -1,8 +1,5 @@
 #include "static_scheduler.hpp"
 
-#include <utils/clutils.hpp>
-#include <utils/measurement_info.hpp>
-
 #include <sstream>
 #include <thread>
 
@@ -52,15 +49,17 @@ StaticScheduler::StaticScheduler(const std::string &kernel_path, const std::stri
 		total += distr[i];
 	}
 	// normalize distribution to a discrete PDF
-	for (int i = 0; i < _distr.size(); i++)
+	for (int i = 0; i < distr.size(); i++)
 	{
-		_distr[i] /= total;
+		_distr.push_back(distr[i] / total);
 		// std::cout << "Normalized weight for device " << _workers[i].device_id << ": " << _distr[i] << std::endl;
 	}
 }
 
-void StaticScheduler::run(CImg<unsigned char> &img, unsigned int reps)
+std::vector<measurement_info> StaticScheduler::run(CImg<unsigned char> &img, unsigned int reps)
 {
+	std::vector<measurement_info> iv(_workers.size());
+
 	// compute image range indices
 	double acc = 0.0;
 	std::vector<unsigned int> indices;
@@ -76,79 +75,98 @@ void StaticScheduler::run(CImg<unsigned char> &img, unsigned int reps)
 		unsigned int lo = i > 0 ? indices[i - 1] : 0;
 		unsigned int hi = i < _workers.size() - 1 ? indices[i] : reps;
 		std::cout << "Thread i = " << i << ": [" << lo << ", " << hi << ")" << std::endl;
-		threads.push_back(std::thread(&StaticScheduler::run_subrange, this, std::ref(img), i, lo, hi));
-		// this->run_subrange(img, 0, 0, 1);
+		threads.push_back(std::thread(&StaticScheduler::run_subrange, this, std::ref(img), i, lo, hi, std::ref(iv[i])));
 	}
 
 	for (auto &t : threads)
 	{
 		t.join();
 	}
+
+	return iv;
 }
 
-void StaticScheduler::run_subrange(CImg<unsigned char> &img, unsigned int idx, unsigned int lo, unsigned int hi)
+void StaticScheduler::run_subrange(CImg<unsigned char> &img, unsigned int idx, unsigned int lo, unsigned int hi, measurement_info& info)
 {
-	int err; // error code returned from api calls
+	int err;
+	auto prog_ini = std::chrono::steady_clock().now();
 
 	size_t width = img.width();
 	size_t height = img.height();
 
-	unsigned char *image_ptr = img.data(); // YA tenemos el puntero a la Image
+	unsigned char *image_ptr = img.data();
 
-	int x0 = height / 2;
-	int y0 = width / 2;
+	unsigned int csize = 256;
+	unsigned int ncells = img.height() * img.width() / csize + img.height() * img.width() % csize == 0 ? 1 : 0;
 
+	int r[256] = {0};
+	int g[256] = {0};
+	int b[256] = {0};
 	// Create OpenCL buffer visible to the OpenCl runtime
 	cl_mem in_device_object = clCreateBuffer(_workers[idx].context_id, CL_MEM_READ_ONLY, sizeof(unsigned char) * height * width * 3, NULL, &err);
 	cl_error(err, "Failed to create in memory buffer at device\n");
-	cl_mem out_device_object = clCreateBuffer(_workers[idx].context_id, CL_MEM_WRITE_ONLY, sizeof(unsigned char) * height * width * 3, NULL, &err);
-	cl_error(err, "Failed to create out memory buffer at device\n");
+	cl_mem r_in_out = clCreateBuffer(_workers[idx].context_id, CL_MEM_READ_WRITE, sizeof(int) * 256, NULL, &err);
+	cl_error(err, "Failed to create r out memory buffer at device\n");
+	cl_mem g_in_out = clCreateBuffer(_workers[idx].context_id, CL_MEM_READ_WRITE, sizeof(int) * 256, NULL, &err);
+	cl_error(err, "Failed to create g out memory buffer at device\n");
+	cl_mem b_in_out = clCreateBuffer(_workers[idx].context_id, CL_MEM_READ_WRITE, sizeof(int) * 256, NULL, &err);
+	cl_error(err, "Failed to create b out memory buffer at device\n");
+
+	// Write date into the memory object
 	err = clEnqueueWriteBuffer(_workers[idx].cmd_queue, in_device_object, CL_TRUE, 0, sizeof(unsigned char) * height * width * 3,
-								image_ptr, 0, NULL, NULL);
+							   image_ptr, 0, NULL, NULL);
+	err = clEnqueueWriteBuffer(_workers[idx].cmd_queue, r_in_out, CL_TRUE, 0, sizeof(int) * 256,
+							   r, 0, NULL, NULL);
+	err = clEnqueueWriteBuffer(_workers[idx].cmd_queue, g_in_out, CL_TRUE, 0, sizeof(int) * 256,
+							   g, 0, NULL, NULL);
+	err = clEnqueueWriteBuffer(_workers[idx].cmd_queue, b_in_out, CL_TRUE, 0, sizeof(int) * 256,
+							   b, 0, NULL, NULL);
 	cl_error(err, "Failed to enqueue a write command\n");
-
-	
-	measurement_info measurement;
-
 	for (unsigned int i = lo; i < hi; i++)
 	{
-		float degrees = 5 * i;
-		float angle = degrees * (M_PI / 180);
-		// Write date into the memory object
-		auto prog_ini = std::chrono::steady_clock().now();
-	
+		// img
 		err = clSetKernelArg(_workers[idx].kernel, 0, sizeof(cl_mem), &in_device_object);
 		cl_error(err, "Failed to set argument 0\n");
-		err = clSetKernelArg(_workers[idx].kernel, 1, sizeof(cl_mem), &out_device_object);
+
+		// r, g, b
+		err = clSetKernelArg(_workers[idx].kernel, 1, sizeof(cl_mem), &r_in_out);
 		cl_error(err, "Failed to set argument 1\n");
-		err = clSetKernelArg(_workers[idx].kernel, 2, sizeof(unsigned int), &width);
+		err = clSetKernelArg(_workers[idx].kernel, 2, sizeof(cl_mem), &g_in_out);
 		cl_error(err, "Failed to set argument 2\n");
-		err = clSetKernelArg(_workers[idx].kernel, 3, sizeof(unsigned int), &height);
+		err = clSetKernelArg(_workers[idx].kernel, 3, sizeof(cl_mem), &b_in_out);
 		cl_error(err, "Failed to set argument 3\n");
-		err = clSetKernelArg(_workers[idx].kernel, 4, sizeof(float), &angle);
+
+		// rpart, gpart, bpart local memory (256 per wg)
+		err = clSetKernelArg(_workers[idx].kernel, 4, 256 * sizeof(unsigned int), NULL);
 		cl_error(err, "Failed to set argument 4\n");
-		err = clSetKernelArg(_workers[idx].kernel, 5, sizeof(int), &x0);
+		err = clSetKernelArg(_workers[idx].kernel, 5, 256 * sizeof(unsigned int), NULL);
 		cl_error(err, "Failed to set argument 5\n");
-		err = clSetKernelArg(_workers[idx].kernel, 6, sizeof(int), &y0);
+		err = clSetKernelArg(_workers[idx].kernel, 6, 256 * sizeof(unsigned int), NULL);
 		cl_error(err, "Failed to set argument 6\n");
+
+		// cols, rows
+		err = clSetKernelArg(_workers[idx].kernel, 7, sizeof(unsigned int), &width);
+		cl_error(err, "Failed to set argument 7\n");
+		err = clSetKernelArg(_workers[idx].kernel, 8, sizeof(unsigned int), &height);
+		cl_error(err, "Failed to set argument 8\n");
 
 		// Launch Kernel
 		cl_event event;
+		size_t local_size[2] = {csize, 1};
 
-		size_t global_size[3] = {height, width, 3};
-		err = clEnqueueNDRangeKernel(_workers[idx].cmd_queue, _workers[idx].kernel, 3, NULL, global_size, NULL, 0, NULL,  &event);
+		// round up to nearest multiple of csize
+		size_t global_size[2] = {height * width + csize - height * width % csize, 3};
+		err = clEnqueueNDRangeKernel(_workers[idx].cmd_queue, _workers[idx].kernel, 2, NULL, global_size, local_size, 0, NULL, &event);
 		cl_error(err, "Failed to launch kernel to the device\n");
 
-		unsigned char *img_out = new unsigned char[sizeof(unsigned char) * height * width * 3];
-		// Read data form device memory back to host memory
+		err = clEnqueueReadBuffer(_workers[idx].cmd_queue, r_in_out, CL_TRUE, 0, sizeof(int) * 256, r, 0, NULL, NULL);
+		cl_error(err, "Failed to enqueue  R a read command\n");
+		err = clEnqueueReadBuffer(_workers[idx].cmd_queue, g_in_out, CL_TRUE, 0, sizeof(int) * 256, g, 0, NULL, NULL);
+		cl_error(err, "Failed to enqueue G a read command\n");
+		err = clEnqueueReadBuffer(_workers[idx].cmd_queue, b_in_out, CL_TRUE, 0, sizeof(int) * 256, b, 0, NULL, NULL);
+		cl_error(err, "Failed to enqueue B a read command\n");
 
-		err = clEnqueueReadBuffer(_workers[idx].cmd_queue, out_device_object, CL_TRUE, 0, sizeof(unsigned char) * height * width * 3, img_out, 0, NULL, NULL);
-		cl_error(err, "Failed to enqueue a read command\n");
-
-		auto prog_end = std::chrono::steady_clock().now();
-
-		// execution time of the whole program
-		double total_nano = std::chrono::duration_cast<std::chrono::nanoseconds>(prog_end - prog_ini).count();
+		// display measurements
 
 		// kernel execution time
 		cl_ulong time_start;
@@ -163,43 +181,43 @@ void StaticScheduler::run_subrange(CImg<unsigned char> &img, unsigned int idx, u
 
 		size_t in_size;
 		err = clGetMemObjectInfo(in_device_object, CL_MEM_SIZE, sizeof(in_size), &in_size, NULL);
-		size_t out_size;
-		err = clGetMemObjectInfo(out_device_object, CL_MEM_SIZE, sizeof(out_size), &out_size, NULL);
-		double dev_global_mem = in_size;
-		double dev_local_mem = 0;
+		size_t r_size;
+		err = clGetMemObjectInfo(r_in_out, CL_MEM_SIZE, sizeof(r_size), &r_size, NULL);
+		size_t g_size;
+		err = clGetMemObjectInfo(g_in_out, CL_MEM_SIZE, sizeof(g_size), &g_size, NULL);
+		size_t b_size;
+		err = clGetMemObjectInfo(b_in_out, CL_MEM_SIZE, sizeof(b_size), &b_size, NULL);
+		double dev_global_mem = in_size + r_size + g_size + b_size;
+		double dev_local_mem = 256 * sizeof(unsigned int) * img.spectrum() * csize;
 		// bandwidth (DtoH, HtoD)
-		double dtoh_bw = out_size / (kernel_nano / 1000000000.0);
-		double htod_bw = in_size / (kernel_nano / 1000000000.0);
+		double dtoh_bw = (r_size + g_size + b_size) / (kernel_nano / 1000000000.0);
+		double htod_bw = (in_size + r_size + g_size + b_size) / (kernel_nano / 1000000000.0);
 		// throughput (work per second)
 		double throughput = 1000000000.0 / kernel_nano;
 
-		measurement_info pmeasurement = {
-			.total_time = total_nano / 1000000.0,
+		measurement_info pm = {
 			.kernel_time = kernel_nano / 1000000.0,
 			.dtoh_bw = dtoh_bw / 1024.0,
 			.htod_bw = htod_bw / 1024.0,
 			.tasks_per_sec = throughput,
 			.host_fp = host_mem / 1024.0,
 			.device_global_fp = dev_global_mem / 1024.0,
-			.device_local_fp = dev_local_mem / 1024.0};
+			.device_local_fp = dev_local_mem / 1024.0
+		};
 
-		CImg<unsigned char> outimg(img_out, img.width(), img.height(), 1, img.spectrum());
-
-		char name[50];
-		snprintf(name, 50, "dev%d-%d.png", idx, i);
-		outimg.save(name);
-
-		measurement += pmeasurement;
+		info += pm;
 	}
-	std::cout << "finished " << _workers[idx].name << std::endl;
-
 	auto prog_end = std::chrono::steady_clock().now();
+
+	// execution time of the whole program
+	double total_nano = std::chrono::duration_cast<std::chrono::nanoseconds>(prog_end - prog_ini).count();
+
+	info /= (hi - lo);
+	info.total_time = total_nano / 1000000.0;
+	
+	// release all objects
 	clReleaseMemObject(in_device_object);
-	clReleaseMemObject(out_device_object);
-
-	clFinish(_workers[idx].cmd_queue);
-
-	// display measurements
-	measurement /= double(hi - lo);
-	std::cout << measurement << std::endl;
+	clReleaseMemObject(r_in_out);
+	clReleaseMemObject(g_in_out);
+	clReleaseMemObject(b_in_out);
 }

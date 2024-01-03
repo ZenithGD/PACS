@@ -5,6 +5,7 @@ add_executable(main
 
     utils/clutils.cpp
     utils/fileutils.cpp
+    utils/measurement_info.cpp
 )
 
 # hist with two arrays

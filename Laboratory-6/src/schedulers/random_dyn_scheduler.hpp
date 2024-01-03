@@ -17,7 +17,7 @@ class StaticScheduler : public Scheduler {
         */
         StaticScheduler(std::vector<double> distr);
 
-        void run(const std::unordered_map<std::string, unsigned int>& images) override;
+        std::vector<measurement_info> run(const std::unordered_map<std::string, unsigned int>& images) override;
     private:
 
         // actual fixed workload distribution

@@ -12,6 +12,9 @@ using namespace cimg_library;
 
 #include <chrono>
 
+#include <utils/clutils.hpp>
+#include <utils/measurement_info.hpp>
+
 struct Worker {
     std::string name;
     cl_platform_id platform_id;
@@ -36,7 +39,7 @@ public:
      */
     Scheduler(const std::string& kernel_path, const std::string& kernel_name);
 
-    virtual void run(CImg<unsigned char>& img, unsigned int reps) = 0;
+    virtual std::vector<measurement_info> run(CImg<unsigned char>& img, unsigned int reps) = 0;
 
     ~Scheduler();
 protected:
