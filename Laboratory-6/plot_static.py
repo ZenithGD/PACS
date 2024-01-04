@@ -1,20 +1,24 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
+import os, sys
+
 # Read the CSV file into a DataFrame
-df = pd.read_csv('static.csv', delimiter=';')
+df = pd.read_csv(sys.argv[1], delimiter=';')
 
 # Extract the 'gpu' and 'cpu' columns
 gpu_data = df['gpu']
 cpu_data = df['cpu']
+total_time = df['total']
 
 # Create a plot
-plt.plot(df['gpu_prop'], gpu_data, color='red', label='GPU')
-plt.plot(df['gpu_prop'], cpu_data, color='blue', label='CPU')
+plt.plot(df['gpu_prop'], gpu_data, color='red', linestyle="--", label='GPU')
+plt.plot(df['gpu_prop'], cpu_data, color='blue', linestyle="--", label='CPU')
+plt.plot(df['gpu_prop'], total_time, color='green', label='Total')
 
 # Set labels and title
 plt.xlabel('Proportion')
-plt.ylabel('Total Time')
+plt.ylabel('Total Time (ms)')
 plt.title('Static Scheduling')
 
 # Set legend

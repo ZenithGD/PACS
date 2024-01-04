@@ -3,6 +3,8 @@
 #include <sstream>
 #include <thread>
 
+#include <plot_hist.hpp>
+
 StaticScheduler::StaticScheduler(const std::string &kernel_path, const std::string &kernel_name, const std::vector<unsigned int> &cores)
 	: Scheduler(kernel_path, kernel_name)
 {
@@ -56,7 +58,7 @@ StaticScheduler::StaticScheduler(const std::string &kernel_path, const std::stri
 	}
 }
 
-std::vector<measurement_info> StaticScheduler::run(CImg<unsigned char> &img, unsigned int reps)
+std::vector<measurement_info> StaticScheduler::run(CImg<unsigned char> &img, unsigned int reps, bool store)
 {
 	std::vector<measurement_info> iv(_workers.size());
 
@@ -75,7 +77,7 @@ std::vector<measurement_info> StaticScheduler::run(CImg<unsigned char> &img, uns
 		unsigned int lo = i > 0 ? indices[i - 1] : 0;
 		unsigned int hi = i < _workers.size() - 1 ? indices[i] : reps;
 		std::cout << "Thread i = " << i << ": [" << lo << ", " << hi << ")" << std::endl;
-		threads.push_back(std::thread(&StaticScheduler::run_subrange, this, std::ref(img), i, lo, hi, std::ref(iv[i])));
+		threads.push_back(std::thread(&StaticScheduler::run_subrange, this, std::ref(img), i, lo, hi, std::ref(iv[i]), store));
 	}
 
 	for (auto &t : threads)
@@ -86,7 +88,7 @@ std::vector<measurement_info> StaticScheduler::run(CImg<unsigned char> &img, uns
 	return iv;
 }
 
-void StaticScheduler::run_subrange(CImg<unsigned char> &img, unsigned int idx, unsigned int lo, unsigned int hi, measurement_info& info)
+void StaticScheduler::run_subrange(CImg<unsigned char> &img, unsigned int idx, unsigned int lo, unsigned int hi, measurement_info &info, bool store)
 {
 	int err;
 	auto prog_ini = std::chrono::steady_clock().now();
@@ -152,11 +154,11 @@ void StaticScheduler::run_subrange(CImg<unsigned char> &img, unsigned int idx, u
 
 		// Launch Kernel
 		cl_event event;
-		size_t local_size[2] = {csize, 1};
+		size_t local_size[1] = {csize};
 
 		// round up to nearest multiple of csize
-		size_t global_size[2] = {height * width + csize - height * width % csize, 3};
-		err = clEnqueueNDRangeKernel(_workers[idx].cmd_queue, _workers[idx].kernel, 2, NULL, global_size, local_size, 0, NULL, &event);
+		size_t global_size[1] = {height * width + csize - height * width % csize};
+		err = clEnqueueNDRangeKernel(_workers[idx].cmd_queue, _workers[idx].kernel, 1, NULL, global_size, local_size, 0, NULL, &event);
 		cl_error(err, "Failed to launch kernel to the device\n");
 
 		err = clEnqueueReadBuffer(_workers[idx].cmd_queue, r_in_out, CL_TRUE, 0, sizeof(int) * 256, r, 0, NULL, NULL);
@@ -202,19 +204,67 @@ void StaticScheduler::run_subrange(CImg<unsigned char> &img, unsigned int idx, u
 			.tasks_per_sec = throughput,
 			.host_fp = host_mem / 1024.0,
 			.device_global_fp = dev_global_mem / 1024.0,
-			.device_local_fp = dev_local_mem / 1024.0
-		};
+			.device_local_fp = dev_local_mem / 1024.0};
 
 		info += pm;
+
+		if (i == hi - 1 && store)
+		{
+
+			int rmax = 0;
+			int gmax = 0;
+			int bmax = 0;
+			float rh[256] = {0};
+			float gh[256] = {0};
+			float bh[256] = {0};
+			for (int i = 0; i < 256; i++)
+			{
+				if (r[i] > rmax)
+				{
+					rmax = r[i];
+				}
+				if (g[i] > gmax)
+				{
+					gmax = g[i];
+				}
+				if (b[i] > bmax)
+				{
+					bmax = b[i];
+				}
+			}
+			for (int i = 0; i < 256; i++)
+			{
+				rh[i] = rmax > 0 ? (float)r[i] / (float)rmax : 0;
+				gh[i] = gmax > 0 ? (float)g[i] / (float)gmax : 0;
+				bh[i] = bmax > 0 ? (float)b[i] / (float)bmax : 0;
+			}
+			Histogram hist_r(rh), hist_g(gh), hist_b(bh);
+
+			unsigned int width = 800, height = 600;
+			CImg<unsigned char> canvas(width, height, 1, 3, 255);
+
+			unsigned char red[] = {255, 0, 0};
+			hist_r.display(canvas, width, height, red);
+
+			unsigned char green[] = {0, 255, 0};
+			hist_g.display(canvas, width, height, green);
+
+			unsigned char blue[] = {0, 0, 255};
+			hist_b.display(canvas, width, height, blue);
+
+			std::ostringstream os;
+			os << "dev" << idx << ".png";
+			canvas.save(os.str().c_str());
+		}
 	}
 	auto prog_end = std::chrono::steady_clock().now();
 
-	// execution time of the whole program
+	// execution time of the whole program in one device
 	double total_nano = std::chrono::duration_cast<std::chrono::nanoseconds>(prog_end - prog_ini).count();
 
 	info /= (hi - lo);
 	info.total_time = total_nano / 1000000.0;
-	
+
 	// release all objects
 	clReleaseMemObject(in_device_object);
 	clReleaseMemObject(r_in_out);

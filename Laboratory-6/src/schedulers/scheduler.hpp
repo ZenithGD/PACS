@@ -39,7 +39,7 @@ public:
      */
     Scheduler(const std::string& kernel_path, const std::string& kernel_name);
 
-    virtual std::vector<measurement_info> run(CImg<unsigned char>& img, unsigned int reps) = 0;
+    virtual std::vector<measurement_info> run(CImg<unsigned char>& img, unsigned int reps, bool store) = 0;
 
     ~Scheduler();
 protected:

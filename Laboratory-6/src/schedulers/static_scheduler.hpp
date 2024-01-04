@@ -19,10 +19,10 @@ class StaticScheduler : public Scheduler {
         */
         StaticScheduler(const std::string& kernel_path, const std::string& kernel_name, const std::vector<double>& distr);
 
-        std::vector<measurement_info> run(CImg<unsigned char>& img, unsigned int reps) override;
+        std::vector<measurement_info> run(CImg<unsigned char>& img, unsigned int reps, bool store) override;
     private:
 
-        void run_subrange(CImg<unsigned char>& img, unsigned int idx, unsigned int lo, unsigned int hi, measurement_info& info);
+        void run_subrange(CImg<unsigned char>& img, unsigned int idx, unsigned int lo, unsigned int hi, measurement_info& info, bool store);
 
         // actual fixed workload distribution
         std::vector<double> _distr;

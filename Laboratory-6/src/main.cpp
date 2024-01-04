@@ -62,22 +62,29 @@ int main(int argc, char** argv) {
         std::vector<double> dist = { pr, 1 - pr };
         StaticScheduler sched(args.kernel_path, args.kernel_name, dist);
 
-        auto iv = sched.run(img, args.repl);
+
+	    auto prog_ini = std::chrono::steady_clock().now();
+        auto iv = sched.run(img, args.repl, false);
+	    auto prog_end = std::chrono::steady_clock().now();
+        // execution time of the whole program
+	    double total_nano = std::chrono::duration_cast<std::chrono::nanoseconds>(prog_end - prog_ini).count();
 
         std::vector<double> info;
 
         for ( int j = 0; j < iv.size(); j++ ) {
             info.push_back(iv[j].total_time);
         }
+
+        info.push_back(total_nano / 1000000.0);
         exec_info.push_back(info);
 
         std::cout << "done " << pr << std::endl;
     }
 
     // write csv to stdout
-    std::cout << "gpu_prop;gpu;cpu" << std::endl;
+    std::cout << "gpu_prop;gpu;cpu;total" << std::endl;
     int i = 0;
     for ( auto& info : exec_info ) {
-        std::cout << (double)i++ / (double)N << ";" << info[0] << ";" << info[1] << std::endl;
+        std::cout << (double)i++ / (double)N << ";" << info[0] << ";" << info[1] << ";" << info[2] << std::endl;
     }
 }
