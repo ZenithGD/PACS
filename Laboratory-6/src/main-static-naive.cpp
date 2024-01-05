@@ -17,6 +17,7 @@ using namespace std;
 
 #include <schedulers/static_scheduler.hpp>
 #include <workers/hist_naive_worker.hpp>
+#include <workers/rot_naive_worker.hpp>
 
 struct Arguments {
     std::string image_path;
