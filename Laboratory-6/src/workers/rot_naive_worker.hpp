@@ -6,10 +6,10 @@
  * Uses both global and local memory
  * Each workitem works with all the channels of a pixel.
  */
-class NaiveHist : public CLWorker
+class NaiveRot : public CLWorker
 {
 public:
-    NaiveHist(
+    NaiveRot(
         std::string name,
         cl_platform_id platform_id,
         cl_device_id device_id,
@@ -22,11 +22,11 @@ public:
                                        context_id,
                                        cmd_queue)
     {
-        std::cout << "Hist -----------" << std::endl;
+        std::cout << "Rot -----------" << std::endl;
         int err;
         // 2.3 Create kernel for each device
         // build kernel for each device
-        char *source = read_source("kernels/hist_tile.cl");
+        char *source = read_source("kernels/rot_kernel.cl");
 
         const char *src_arr[1] = {source};
 
@@ -51,7 +51,7 @@ public:
         clGetProgramBuildInfo(_program, _device_id, CL_PROGRAM_BUILD_LOG, sizeof(buffer), &buffer, NULL);
         printf("Info: %s\n", buffer);
 
-        _kernel = clCreateKernel(_program, "hist_tile", &err);
+        _kernel = clCreateKernel(_program, "rot", &err);
         cl_error(err, "Failed to create kernel from the program\n");
     }
 
@@ -81,18 +81,9 @@ public:
 
 private:
     cl_mem _in_device_object;
-    cl_mem _r_in_out;
-    cl_mem _g_in_out;
-    cl_mem _b_in_out;
+    cl_mem _out_device_object;
 
     size_t _width, _height, _channels;
 
-    unsigned char *_image_ptr;
-
-    unsigned int _csize;
-    unsigned int _ncells;
-
-    int _r[256] = {0};
-    int _g[256] = {0};
-    int _b[256] = {0};
+    unsigned char *_image_ptr, *_img_out;
 };

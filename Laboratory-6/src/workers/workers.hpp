@@ -1,7 +1,7 @@
 #pragma once
 
 #include <iostream>
-
+#define cimg_use_jpeg
 #ifdef __APPLE__
 #include <OpenCL/opencl.h>
 #else
@@ -13,6 +13,7 @@ using namespace cimg_library;
 #include <chrono>
 
 #include <utils/clutils.hpp>
+#include <utils/fileutils.hpp>
 #include <utils/measurement_info.hpp>
 
 #include <memory>
@@ -27,17 +28,11 @@ public:
 
         // command and context ids
         cl_context context_id,
-        cl_command_queue cmd_queue,
-
-        // id of the kernel
-        cl_kernel kernel,
-        cl_program program) : _name(name),
+        cl_command_queue cmd_queue) : _name(name),
                               _platform_id(platform_id),
                               _device_id(device_id),
                               _context_id(context_id),
-                              _cmd_queue(cmd_queue),
-                              _kernel(kernel),
-                              _program(program)
+                              _cmd_queue(cmd_queue)
     {
     }
 
@@ -100,9 +95,7 @@ typedef std::function<WorkerPtr(
     cl_platform_id,
     cl_device_id,
     cl_context,
-    cl_command_queue,
-    cl_kernel,
-    cl_program
+    cl_command_queue
 )> WorkerFn;
 
 typedef std::function<WorkerFn(unsigned int)> WorkerSetupFn;
@@ -115,16 +108,12 @@ WorkerPtr kernel_fn(std::string name,
                     cl_platform_id platform_id,
                     cl_device_id device_id,
                     cl_context context_id,
-                    cl_command_queue cmd_queue,
-                    cl_kernel kernel,
-                    cl_program program)
+                    cl_command_queue cmd_queue)
 {
     return std::make_shared<TaskType>(
                 name,
                 platform_id,
                 device_id,
                 context_id,
-                cmd_queue,
-                kernel,
-                program);
+                cmd_queue);
 }

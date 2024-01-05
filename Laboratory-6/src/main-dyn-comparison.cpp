@@ -16,7 +16,6 @@ using namespace std;
 
 #include <schedulers/dyn_scheduler.hpp>
 #include <workers/hist_naive_worker.hpp>
-#include <workers/rot_naive_worker.hpp>
 
 struct Arguments
 {
@@ -24,7 +23,8 @@ struct Arguments
     unsigned int repl;
     // number of iterations per split.
     unsigned int step;
-    std::string kernel_path, kernel_name;
+    // number of experiments
+    unsigned int reps;
 };
 
 Arguments parse_args(int argc, char **argv)
@@ -41,6 +41,7 @@ Arguments parse_args(int argc, char **argv)
     args.image_path = std::string(argv[1]);
     args.repl = std::stoul(argv[2]);
     args.step = std::stoul(argv[3]);
+    args.reps = std::stoul(argv[4]);
 
     std::cout << "[image_path]>  " << args.image_path << " x " << args.repl << ::endl;
     std::cout << "[step]>        " << args.step << std::endl;
@@ -53,11 +54,11 @@ Arguments parse_args(int argc, char **argv)
 WorkerFn worker_setup(unsigned int idx) {
     switch ( idx ) {
         case 0:
-            return kernel_fn<NaiveRot>;
+            return kernel_fn<NaiveHist>;
         case 1:
-            return kernel_fn<NaiveRot>;
+            return kernel_fn<NaiveHist>;
         default:
-            return kernel_fn<NaiveRot>;
+            return kernel_fn<NaiveHist>;
     }
 }
 
@@ -76,7 +77,7 @@ int main(int argc, char **argv)
     auto prog_ini = std::chrono::steady_clock().now();
 
     // set display to true to store a result from each device
-    auto iv = sched.run(img, args.repl, true);
+    auto iv = sched.run(img, args.repl, false);
     auto prog_end = std::chrono::steady_clock().now();
     // execution time of the whole program
     double total_nano = std::chrono::duration_cast<std::chrono::nanoseconds>(prog_end - prog_ini).count();

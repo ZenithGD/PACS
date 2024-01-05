@@ -13,6 +13,7 @@ using namespace std;
 
 #include <iostream>
 #include <fstream>
+#include <functional>
 
 #include <schedulers/static_scheduler.hpp>
 #include <workers/hist_naive_worker.hpp>
@@ -27,22 +28,16 @@ struct Arguments {
 
 Arguments parse_args(int argc, char** argv) {
 
-    if ( argc < 2 ) {
-        std::cerr << "Usage: main <kernel_path> <kernel_name> <image_path> (N)" << std::endl;
+    if ( argc < 3 ) {
+        std::cerr << "Usage: main <image_path> (N)" << std::endl;
         exit(1);
     }
 
     // get kernel arg
     Arguments args;
-    args.kernel_path = std::string(argv[1]);
-    args.kernel_name = std::string(argv[2]);
-    args.image_path = std::string(argv[3]);
-    if ( argc > 3 ) {
-        args.repl = std::stoul(argv[4]);
-    }
+    args.image_path = std::string(argv[1]);
+    args.repl = std::stoul(argv[2]);
 
-    std::cout << "[kernel_path]> " << args.kernel_path << std::endl;
-    std::cout << "[kernel_name]> " << args.kernel_name << std::endl;
     std::cout << "[image_path]> " << args.image_path << " x " << args.repl << ::endl;
 
     return args;
@@ -76,8 +71,7 @@ int main(int argc, char** argv) {
         double pr = (double)i / (double)N;
         std::vector<double> dist = { pr, 1 - pr };
         StaticScheduler sched(
-            args.kernel_path, args.kernel_name, 
-            std::function(worker_setup),
+            worker_setup, 
             dist);
 
         if ( i == 0 ) {

@@ -5,8 +5,8 @@
 
 #include <plot_hist.hpp>
 
-DynamicScheduler::DynamicScheduler(const std::string &kernel_path, const std::string &kernel_name, const WorkerSetupFn &_wfn, const unsigned int step)
-    : Scheduler(kernel_path, kernel_name, _wfn), _step(step), _distr(_workers.size())
+DynamicScheduler::DynamicScheduler(const WorkerSetupFn &_wfn, const unsigned int step)
+    : Scheduler(_wfn), _step(step), _distr(_workers.size())
 {
     // Initial uniform distribution
     std::vector<double> dist_snapshot;

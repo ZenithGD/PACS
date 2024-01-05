@@ -42,6 +42,8 @@ void NaiveHist::setup(CImg<unsigned char> &img)
 measurement_info NaiveHist::run()
 {
     int err;
+
+    // Kernel arguments can be set in the CLWorker::setup() too, as long as they don't change.
     // img
     err = clSetKernelArg(_kernel, 0, sizeof(cl_mem), &_in_device_object);
     cl_error(err, "Failed to set argument 0\n");
@@ -177,6 +179,6 @@ void NaiveHist::save_result()
     hist_b.display(canvas, width, height, blue);
 
     std::ostringstream os;
-    os << "dev" << _name << ".png";
+    os << "dev" << _name << ".jpeg";
     canvas.save(os.str().c_str());
 }

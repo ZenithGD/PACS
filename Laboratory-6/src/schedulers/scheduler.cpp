@@ -8,12 +8,10 @@
 #include <workers/workers.hpp>
 #include <workers/hist_naive_worker.hpp>
 
-Scheduler::Scheduler(const std::string &kernel_path, const std::string &kernel_name,
-                     const WorkerSetupFn &_wfn)
-    : Scheduler(kernel_path, kernel_name, _wfn, {}) {}
+Scheduler::Scheduler(const WorkerSetupFn &_wfn)
+    : Scheduler(_wfn, {}) {}
 
-Scheduler::Scheduler(const std::string &kernel_path, const std::string &kernel_name,
-                     const WorkerSetupFn &_wfn, std::set<unsigned int> selection)
+Scheduler::Scheduler(const WorkerSetupFn &_wfn, std::set<unsigned int> selection)
 {
     // TODO: allow passing different tasks
     const cl_uint num_platforms_ids = 10;            // max of allocatable platforms
@@ -66,38 +64,7 @@ Scheduler::Scheduler(const std::string &kernel_path, const std::string &kernel_n
             std::cout << "Created queue with id " << command_queue << " for platform & device [" << i << " & " << j << "]" << std::endl;
             _queues.push_back(command_queue);
 
-            // 2.3 Create kernel for each device
-
-            // build kernel for each device
-            char *source = read_source(kernel_path);
-
-            const char *src_arr[1] = {source};
-
-            const size_t lengths[1] = {strlen(source)};
-
-            // create program from buffer
-            cl_program program = clCreateProgramWithSource(context, 1, src_arr, lengths, &err);
-            cl_error(err, "Failed to create program with source\n");
-            delete source;
-
-            // Build the executable and check errors
-            err = clBuildProgram(program, 0, NULL, "-cl-std=CL2.0", NULL, NULL);
-            char buffer[2048];
-            if (err != CL_SUCCESS)
-            {
-                size_t len;
-                printf("Error: Some error at building process.\n");
-                clGetProgramBuildInfo(program, devices_ids[i][j], CL_PROGRAM_BUILD_LOG, sizeof(buffer), &buffer, NULL);
-                printf("%s\n", buffer);
-                exit(-1);
-            }
-            clGetProgramBuildInfo(program, devices_ids[i][j], CL_PROGRAM_BUILD_LOG, sizeof(buffer), &buffer, NULL);
-            printf("Info: %s\n", buffer);
-
-            cl_kernel kernel = clCreateKernel(program, kernel_name.c_str(), &err);
-            cl_error(err, "Failed to create kernel from the program\n");
-
-            // 2.4 Add worker struct with all info
+            // 2.3 Add worker struct with all info
             std::string tname(name_buffer);
 
             std::replace(tname.begin(), tname.end(), ' ', '_');
@@ -106,9 +73,7 @@ Scheduler::Scheduler(const std::string &kernel_path, const std::string &kernel_n
                 platforms_ids[i],
                 devices_ids[i][j],
                 context,
-                command_queue,
-                kernel,
-                program);
+                command_queue);
 
             _workers.push_back(w);
         }

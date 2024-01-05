@@ -26,7 +26,7 @@ plt.ylabel('Total Time (ms)')
 plt.title('Static Scheduling')
 
 # Set legend
-plt.legend()
+plt.legend(title="Device")
 
 # Show the plot
 plt.show()

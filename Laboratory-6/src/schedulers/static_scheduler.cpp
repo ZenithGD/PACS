@@ -5,9 +5,8 @@
 
 #include <plot_hist.hpp>
 
-StaticScheduler::StaticScheduler(const std::string &kernel_path, const std::string &kernel_name, 
-	const WorkerSetupFn &_wfn, const std::vector<double> &distr)
-	: Scheduler(kernel_path, kernel_name, _wfn)
+StaticScheduler::StaticScheduler(const WorkerSetupFn &_wfn, const std::vector<double> &distr)
+	: Scheduler(_wfn)
 {
 	// compute total
 	double total = 0.0;

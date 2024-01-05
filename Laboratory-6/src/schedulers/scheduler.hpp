@@ -1,5 +1,6 @@
 #pragma once
 
+#define cimg_use_jpeg
 #include <iostream>
 
 #ifdef __APPLE__
@@ -27,11 +28,7 @@ public:
     /**
      * @brief Create a scheduler with all available devices
      */
-    Scheduler(
-        const std::string &kernel_path, 
-        const std::string &kernel_name,
-        const WorkerSetupFn &_wfn
-    );
+    Scheduler(const WorkerSetupFn &_wfn);
 
     /**
      * @brief Create a scheduler with a subset of the devices
@@ -39,8 +36,7 @@ public:
      * @param selection The set of the indices that correspond with the devices. 
      * If the selection is empty, all the devices will be used.
      */
-    Scheduler(const std::string &kernel_path, const std::string &kernel_name, 
-    const WorkerSetupFn &_wfn, std::set<unsigned int> selection);
+    Scheduler(const WorkerSetupFn &_wfn, std::set<unsigned int> selection);
 
     virtual std::vector<measurement_info> run(CImg<unsigned char> &img, unsigned int reps, bool store) = 0;
 

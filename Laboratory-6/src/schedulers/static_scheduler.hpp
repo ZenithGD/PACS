@@ -11,8 +11,7 @@ public:
      *
      * distribution will always be normalized to a discrete PDF
      */
-    StaticScheduler(const std::string &kernel_path, const std::string &kernel_name,
-                    const WorkerSetupFn &_wfn, const std::vector<double> &distr);
+    StaticScheduler(const WorkerSetupFn &_wfn, const std::vector<double> &distr);
 
     std::vector<measurement_info> run(CImg<unsigned char> &img, unsigned int reps, bool store) override;
 

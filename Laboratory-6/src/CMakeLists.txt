@@ -12,6 +12,7 @@ add_library(schedule
     schedulers/dyn_scheduler.cpp
 
     workers/hist_naive_worker.cpp
+    workers/rot_naive_worker.cpp
 
     utils/clutils.cpp
     utils/fileutils.cpp

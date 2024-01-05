@@ -3,7 +3,6 @@
 #pragma OPENCL EXTENSION cl_khr_local_int32_base_atomics: enable
 #pragma OPENCL EXTENSION cl_khr_local_int32_extended_atomics: enable
 
-
 // Updated kernel to work with 3 channels separately
 __kernel void hist_tile(
   __global uchar *img,

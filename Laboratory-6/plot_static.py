@@ -30,11 +30,11 @@ plt.plot(labels, total_data, color='green', label="CPU")
 
 # Set labels and title
 plt.xlabel('Proportion')
-plt.ylabel('Total Time')
+plt.ylabel('Total Time (ms)')
 plt.title('Static Scheduling')
 
 # Set legend
-plt.legend()
+plt.legend(title="Device")
 
 # Set the x-axis range from 0 to 1
 plt.xlim(0, 1)

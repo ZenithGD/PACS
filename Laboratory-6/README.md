@@ -9,7 +9,7 @@ source setpath.sh
 Also compile the project with CMake using the provided script:
 
 ```bash
-./build.sh
+./app-build.sh
 ```
 
 Finally execute the program you want. No need to specify full path!

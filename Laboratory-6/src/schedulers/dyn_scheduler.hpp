@@ -9,7 +9,7 @@ class DynamicScheduler : public Scheduler {
          * Static scheduler with automatic workload distribution, 
          * based on the number of compute cores passed as argument and the underlying core clock frequency
         */
-        DynamicScheduler(const std::string& kernel_path, const std::string& kernel_name, const WorkerSetupFn &_wfn, const unsigned int step);
+        DynamicScheduler(const WorkerSetupFn &_wfn, const unsigned int step);
 
         std::vector<measurement_info> run(CImg<unsigned char>& img, unsigned int reps, bool store) override;
 
