@@ -1,4 +1,4 @@
-gpu_prop;Intel(R)_UHD_Graphics_620_[0x3ea0];NVIDIA_GeForce_MX130;total
+gpu_prop;cpu;gpu;total
 0;0.638423;200.84;201.176;
 0.05;45.7289;196.42;196.677;
 0.1;57.6264;184.393;184.678;

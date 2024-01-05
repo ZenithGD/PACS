@@ -59,6 +59,8 @@ WorkerFn worker_setup(unsigned int idx) {
             return kernel_fn<NaiveHist>;
         case 1:
             return kernel_fn<NaiveHist>;
+        default:
+            return kernel_fn<NaiveHist>;
     }
 }
 
@@ -82,4 +84,26 @@ int main(int argc, char **argv)
     double total_nano = std::chrono::duration_cast<std::chrono::nanoseconds>(prog_end - prog_ini).count();
 
     std::cout << "total time (ms):" << total_nano / 1e6 << std::endl;
+
+    // write csv to file
+    std::ostringstream os;
+    os << "dyn-distr-" << args.repl << "-" << args.step << ".csv";
+    std::ofstream out(os.str());
+    if ( !out.is_open() ) {
+        std::cout << "Can't open output csv!" << std::endl;
+        exit(1);
+    }
+    out << "imgs;";
+    for ( int i = 0; i < sched.get_workers().size(); i++ ) {
+        out << sched.get_workers()[i]->get_name() << ";";
+    }
+    out <<"total" << std::endl;
+    int i = 0;
+    for ( auto& snapshot : sched.get_dist_snapshots() ) {
+        out << std::min(i++ * args.step, args.repl) << ";";
+        for ( auto& p : snapshot ) {
+            out << p << ";";
+        }
+        out << std::endl;
+    }
 }

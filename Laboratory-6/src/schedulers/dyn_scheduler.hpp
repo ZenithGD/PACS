@@ -12,6 +12,14 @@ class DynamicScheduler : public Scheduler {
         DynamicScheduler(const std::string& kernel_path, const std::string& kernel_name, const WorkerSetupFn &_wfn, const unsigned int step);
 
         std::vector<measurement_info> run(CImg<unsigned char>& img, unsigned int reps, bool store) override;
+
+        /**
+         * @brief Get the workload distribution snapshots for each split
+         * 
+         * @return const std::vector<std::vector<double>>& 
+         */
+        const std::vector<std::vector<double>>& get_dist_snapshots() const { return _balance_ev; }
+    
     private:
 
         void run_subrange(CImg<unsigned char>& img, unsigned int idx, unsigned int lo, unsigned int hi, measurement_info& info, bool store);
@@ -19,7 +27,7 @@ class DynamicScheduler : public Scheduler {
         // current workload distribution
         std::vector<double> _distr;
 
-        // 
+        // workload distribution snapshots
         std::vector<std::vector<double>> _balance_ev;
         
         unsigned int _step;

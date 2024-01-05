@@ -9,11 +9,17 @@ DynamicScheduler::DynamicScheduler(const std::string &kernel_path, const std::st
     : Scheduler(kernel_path, kernel_name, _wfn), _step(step), _distr(_workers.size())
 {
     // Initial uniform distribution
+    std::vector<double> dist_snapshot;
     for (int i = 0; i < _workers.size(); i++)
     {
         _distr[i] = 1.0f / (double)_workers.size();
         // std::cout << "Normalized weight for device " << _workers[i].device_id << ": " << _distr[i] << std::endl;
+
+        // save initial balancing for device
+        dist_snapshot.push_back(_distr[i]);
     }
+    // save balancing snapshot
+    _balance_ev.push_back(dist_snapshot);
 }
 
 std::vector<measurement_info> DynamicScheduler::run(CImg<unsigned char> &img, unsigned int reps, bool store)
@@ -29,7 +35,8 @@ std::vector<measurement_info> DynamicScheduler::run(CImg<unsigned char> &img, un
         for (unsigned i = 0; i < _distr.size(); i++)
         {
             acc += _distr[i];
-            indices.push_back(static_cast<unsigned int>(_step * acc));
+            unsigned int sz = std::min(_step, reps - s);
+            indices.push_back(static_cast<unsigned int>(sz * acc));
         }
 
         /*
@@ -60,13 +67,20 @@ std::vector<measurement_info> DynamicScheduler::run(CImg<unsigned char> &img, un
         std::cout << "New distribution: " << std::endl;
 
         // update weights
+        std::vector<double> dist_snapshot;
         for ( unsigned int i = 0; i < _distr.size(); i++ ) {
             _distr[i] = iv[i].tasks_per_sec / total_thr;
             std::cout << _workers[i]->get_name() << ": " << _distr[i] << std::endl;
 
             // accumulate measurement
             total_iv[i] += iv[i];
+
+            // save balancing for device
+            dist_snapshot.push_back(_distr[i]);
         }
+
+        // save balancing snapshot
+        _balance_ev.push_back(dist_snapshot);
     }
 
     return total_iv;

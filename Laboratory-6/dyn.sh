@@ -1,0 +1,9 @@
+main-dyn kernels/hist_tile.cl hist_tile $1 5000 100
+main-dyn kernels/hist_tile.cl hist_tile $1 5000 250
+main-dyn kernels/hist_tile.cl hist_tile $1 5000 500
+main-dyn kernels/hist_tile.cl hist_tile $1 5000 750
+main-dyn kernels/hist_tile.cl hist_tile $1 5000 1000
+main-dyn kernels/hist_tile.cl hist_tile $1 5000 1250
+main-dyn kernels/hist_tile.cl hist_tile $1 5000 1500
+main-dyn kernels/hist_tile.cl hist_tile $1 5000 1750
+main-dyn kernels/hist_tile.cl hist_tile $1 5000 2000

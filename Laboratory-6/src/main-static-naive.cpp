@@ -56,6 +56,8 @@ WorkerFn worker_setup(unsigned int idx) {
             return kernel_fn<NaiveHist>;
         case 1:
             return kernel_fn<NaiveHist>;
+        default:
+            return kernel_fn<NaiveHist>;
     }
 }
 
@@ -102,19 +104,28 @@ int main(int argc, char** argv) {
         std::cout << "done " << pr << std::endl;
     }
 
-    // write csv to stdout
-
-    std::cout << "gpu_prop;";
-    for ( int i = 0; i < exec_info[0].size() - 1; i++ ) {
-        std::cout << names[i] << ";";
+    // write csv to file
+    std::ostringstream os;
+    os << "static-" << args.repl << ".csv";
+    std::ofstream out(os.str());
+    if ( !out.is_open() ) {
+        std::cout << "Can't open output csv!" << std::endl;
+        exit(1);
     }
-    std::cout <<"total" << std::endl;
+
+    out << "gpu_prop;";
+    for ( int i = 0; i < exec_info[0].size() - 1; i++ ) {
+        out << names[i] << ";";
+    }
+    out <<"total" << std::endl;
     int i = 0;
     for ( auto& info : exec_info ) {
-        std::cout << (double)i++ / (double)N << ";";
+        out << (double)i++ / (double)N << ";";
         for ( auto& time : info ) {
-            std::cout << time << ";";
+            out << time << ";";
         }
-        std::cout << std::endl;
+        out << std::endl;
     }
+
+    out.close();
 }
