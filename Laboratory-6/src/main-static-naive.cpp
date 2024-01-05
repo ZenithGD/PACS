@@ -15,6 +15,7 @@ using namespace std;
 #include <fstream>
 
 #include <schedulers/static_scheduler.hpp>
+#include <workers/hist_naive_worker.hpp>
 
 struct Arguments {
     std::string image_path;
@@ -36,9 +37,8 @@ Arguments parse_args(int argc, char** argv) {
     args.kernel_path = std::string(argv[1]);
     args.kernel_name = std::string(argv[2]);
     args.image_path = std::string(argv[3]);
-    args.prop = std::stod(argv[4]);
-    if ( argc > 4 ) {
-        args.repl = std::stoul(argv[5]);
+    if ( argc > 3 ) {
+        args.repl = std::stoul(argv[4]);
     }
 
     std::cout << "[kernel_path]> " << args.kernel_path << std::endl;
@@ -46,6 +46,17 @@ Arguments parse_args(int argc, char** argv) {
     std::cout << "[image_path]> " << args.image_path << " x " << args.repl << ::endl;
 
     return args;
+}
+
+// Redundant function but shows the potential of our implementation
+// to set a different kernel per device.
+WorkerFn worker_setup(unsigned int idx) {
+    switch ( idx ) {
+        case 0:
+            return kernel_fn<NaiveHist>;
+        case 1:
+            return kernel_fn<NaiveHist>;
+    }
 }
 
 int main(int argc, char** argv) {
@@ -56,12 +67,22 @@ int main(int argc, char** argv) {
     const unsigned int N = 20;
     std::vector<std::vector<double>> exec_info;
 
+    std::vector<std::string> names;
+
     // perform experiment with different balancing proportions
     for ( int i = 0; i <= N; i++ ) {    
         double pr = (double)i / (double)N;
         std::vector<double> dist = { pr, 1 - pr };
-        StaticScheduler sched(args.kernel_path, args.kernel_name, dist);
+        StaticScheduler sched(
+            args.kernel_path, args.kernel_name, 
+            std::function(worker_setup),
+            dist);
 
+        if ( i == 0 ) {
+            for ( auto& w : sched.get_workers() ) {
+                names.push_back(w->get_name());
+            }
+        }
 
 	    auto prog_ini = std::chrono::steady_clock().now();
         auto iv = sched.run(img, args.repl, false);
@@ -82,9 +103,18 @@ int main(int argc, char** argv) {
     }
 
     // write csv to stdout
-    std::cout << "gpu_prop;gpu;cpu;total" << std::endl;
+
+    std::cout << "gpu_prop;";
+    for ( int i = 0; i < exec_info[0].size() - 1; i++ ) {
+        std::cout << names[i] << ";";
+    }
+    std::cout <<"total" << std::endl;
     int i = 0;
     for ( auto& info : exec_info ) {
-        std::cout << (double)i++ / (double)N << ";" << info[0] << ";" << info[1] << ";" << info[2] << std::endl;
+        std::cout << (double)i++ / (double)N << ";";
+        for ( auto& time : info ) {
+            std::cout << time << ";";
+        }
+        std::cout << std::endl;
     }
 }

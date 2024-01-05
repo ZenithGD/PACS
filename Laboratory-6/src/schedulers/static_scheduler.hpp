@@ -1,29 +1,24 @@
-#pragma once 
+#pragma once
 
 #include "scheduler.hpp"
 
-class StaticScheduler : public Scheduler {
-    public:
+class StaticScheduler : public Scheduler
+{
+public:
+    /**
+     * Static scheduler with preset workload distribution
+     * Note that the distribution might not be the optimal one!
+     *
+     * distribution will always be normalized to a discrete PDF
+     */
+    StaticScheduler(const std::string &kernel_path, const std::string &kernel_name,
+                    const WorkerSetupFn &_wfn, const std::vector<double> &distr);
 
-        /**
-         * Static scheduler with automatic workload distribution, 
-         * based on the number of compute cores passed as argument and the underlying core clock frequency
-        */
-        StaticScheduler(const std::string& kernel_path, const std::string& kernel_name, const std::vector<unsigned int>& cores);
+    std::vector<measurement_info> run(CImg<unsigned char> &img, unsigned int reps, bool store) override;
 
-        /**
-         * Static scheduler with preset workload distribution
-         * Note that the distribution might not be the optimal one!
-         * 
-         * distribution will always be normalized to a discrete PDF
-        */
-        StaticScheduler(const std::string& kernel_path, const std::string& kernel_name, const std::vector<double>& distr);
+private:
+    void run_subrange(CImg<unsigned char> &img, unsigned int idx, unsigned int lo, unsigned int hi, measurement_info &info, bool store);
 
-        std::vector<measurement_info> run(CImg<unsigned char>& img, unsigned int reps, bool store) override;
-    private:
-
-        void run_subrange(CImg<unsigned char>& img, unsigned int idx, unsigned int lo, unsigned int hi, measurement_info& info, bool store);
-
-        // actual fixed workload distribution
-        std::vector<double> _distr;
+    // actual fixed workload distribution
+    std::vector<double> _distr;
 };

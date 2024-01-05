@@ -7,9 +7,13 @@ import os, sys
 df = pd.read_csv(sys.argv[1], delimiter=';')
 
 # Extract the 'gpu' and 'cpu' columns
-gpu_data = df['gpu']
-cpu_data = df['cpu']
+cpu_column = df.columns[1]
+gpu_column = df.columns[2]
 total_time = df['total']
+
+# Extract the CPU and GPU columns
+cpu_data = df[cpu_column]
+gpu_data = df[gpu_column]
 
 # Create a plot
 plt.plot(df['gpu_prop'], gpu_data, color='red', linestyle="--", label='GPU')
@@ -17,7 +21,7 @@ plt.plot(df['gpu_prop'], cpu_data, color='blue', linestyle="--", label='CPU')
 plt.plot(df['gpu_prop'], total_time, color='green', label='Total')
 
 # Set labels and title
-plt.xlabel('Proportion')
+plt.xlabel('CPU Proportion')
 plt.ylabel('Total Time (ms)')
 plt.title('Static Scheduling')
 

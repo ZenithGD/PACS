@@ -1,14 +1,24 @@
 #include "scheduler.hpp"
 
+#include <algorithm>
+
 #include <utils/clutils.hpp>
 #include <utils/fileutils.hpp>
 
-Scheduler::Scheduler(const std::string& kernel_path, const std::string& kernel_name)
+#include <workers/workers.hpp>
+#include <workers/hist_naive_worker.hpp>
+
+Scheduler::Scheduler(const std::string &kernel_path, const std::string &kernel_name,
+                     const WorkerSetupFn &_wfn)
+    : Scheduler(kernel_path, kernel_name, _wfn, {}) {}
+
+Scheduler::Scheduler(const std::string &kernel_path, const std::string &kernel_name,
+                     const WorkerSetupFn &_wfn, std::set<unsigned int> selection)
 {
     // TODO: allow passing different tasks
-    const cl_uint num_platforms_ids = 10;                         // max of allocatable platforms
-    cl_platform_id platforms_ids[num_platforms_ids];              // array of platforms
-    cl_uint n_platforms;                                          // effective number of platforms in use
+    const cl_uint num_platforms_ids = 10;            // max of allocatable platforms
+    cl_platform_id platforms_ids[num_platforms_ids]; // array of platforms
+    cl_uint n_platforms;                             // effective number of platforms in use
 
     const cl_uint num_devices_ids = 10;                           // max of allocatable devices
     cl_device_id devices_ids[num_platforms_ids][num_devices_ids]; // array of devices
@@ -38,9 +48,14 @@ Scheduler::Scheduler(const std::string& kernel_path, const std::string& kernel_n
 
         for (int j = 0; j < n_devices[i]; j++)
         {
+            if (!selection.empty() && selection.find(i * n_platforms + j) == selection.end())
+            {
+                continue;
+            }
+
             err = clGetDeviceInfo(devices_ids[i][j], CL_DEVICE_NAME, sizeof(name_buffer), &name_buffer, NULL);
             cl_error(err, "clGetDeviceInfo: Getting device name");
-            printf("\t\t [%d]-Platform [%d]-Device CL_DEVICE_NAME: %s\n", i, j,name_buffer);
+            printf("\t\t [%d]-Platform [%d]-Device CL_DEVICE_NAME: %s\n", i, j, name_buffer);
             // create a new command queue for each device
             cl_command_queue command_queue;
 
@@ -63,7 +78,7 @@ Scheduler::Scheduler(const std::string& kernel_path, const std::string& kernel_n
             // create program from buffer
             cl_program program = clCreateProgramWithSource(context, 1, src_arr, lengths, &err);
             cl_error(err, "Failed to create program with source\n");
-            free(source);
+            delete source;
 
             // Build the executable and check errors
             err = clBuildProgram(program, 0, NULL, "-cl-std=CL2.0", NULL, NULL);
@@ -83,34 +98,26 @@ Scheduler::Scheduler(const std::string& kernel_path, const std::string& kernel_n
             cl_error(err, "Failed to create kernel from the program\n");
 
             // 2.4 Add worker struct with all info
-            Worker w{
-                .name = std::string(name_buffer),
-                .platform_id = platforms_ids[i],
-                .device_id = devices_ids[i][j],
-                .context_id = context,
-                .cmd_queue = command_queue,
-                .kernel = kernel,
-                .program = program
-            };
+            std::string tname(name_buffer);
+
+            std::replace(tname.begin(), tname.end(), ' ', '_');
+            auto w = _wfn(i * n_platforms + j)(
+                tname,
+                platforms_ids[i],
+                devices_ids[i][j],
+                context,
+                command_queue,
+                kernel,
+                program);
 
             _workers.push_back(w);
         }
     }
-    
 }
 
 Scheduler::~Scheduler()
 {
     int err;
-
-    for (auto &w : _workers) {
-        std::cout << "Releasing program with id " << w.program << std::endl;
-        err = clReleaseProgram(w.program);
-        cl_error(err, "Failed to release program resources");
-        std::cout << "Releasing kernel with id " << w.kernel << std::endl;
-        err = clReleaseKernel(w.kernel);
-        cl_error(err, "Failed to release kernel resources");
-    }
 
     // free command queues
     for (auto &qid : _queues)

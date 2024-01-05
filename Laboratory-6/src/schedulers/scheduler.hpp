@@ -15,38 +15,44 @@ using namespace cimg_library;
 #include <utils/clutils.hpp>
 #include <utils/measurement_info.hpp>
 
-struct Worker {
-    std::string name;
-    cl_platform_id platform_id;
-    cl_device_id device_id;
+#include <memory>
 
-    // command and context ids
-    cl_context context_id;
-    cl_command_queue cmd_queue;
+#include <workers/workers.hpp>
 
+#include <set>
 
-    // id of the kernel
-    cl_kernel kernel;
-    cl_program program;
-};
-
-class Scheduler {
+class Scheduler
+{
 public:
     /**
      * @brief Create a scheduler with all available devices
-     * 
-     * @param images 
      */
-    Scheduler(const std::string& kernel_path, const std::string& kernel_name);
+    Scheduler(
+        const std::string &kernel_path, 
+        const std::string &kernel_name,
+        const WorkerSetupFn &_wfn
+    );
 
-    virtual std::vector<measurement_info> run(CImg<unsigned char>& img, unsigned int reps, bool store) = 0;
+    /**
+     * @brief Create a scheduler with a subset of the devices
+     * 
+     * @param selection The set of the indices that correspond with the devices. 
+     * If the selection is empty, all the devices will be used.
+     */
+    Scheduler(const std::string &kernel_path, const std::string &kernel_name, 
+    const WorkerSetupFn &_wfn, std::set<unsigned int> selection);
+
+    virtual std::vector<measurement_info> run(CImg<unsigned char> &img, unsigned int reps, bool store) = 0;
 
     ~Scheduler();
-protected:
 
+    /********************** get-set functions *********************/
+    inline const std::vector<std::shared_ptr<CLWorker>>& get_workers() const { return _workers; }
+
+protected:
     // OpenCL resources
     std::vector<cl_context> _contexts;
     std::vector<cl_command_queue> _queues;
 
-    std::vector<Worker> _workers;
+    std::vector<std::shared_ptr<CLWorker>> _workers;
 };
