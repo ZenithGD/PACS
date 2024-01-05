@@ -29,4 +29,6 @@ plt.title('Static Scheduling')
 plt.legend(title="Device")
 
 # Show the plot
-plt.show()
+# Get the base filename without extension
+base_filename, _ = os.path.splitext(sys.argv[1])
+plt.savefig(base_filename + '-dist.png')
