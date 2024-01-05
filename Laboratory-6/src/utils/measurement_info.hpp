@@ -15,6 +15,8 @@ struct measurement_info {
     // memory footprint (KB)
     double host_fp = 0.0, device_global_fp = 0.0, device_local_fp = 0.0;
 
+    double dtoh_time = 0.0, htod_time = 0.0;
+
     /**
      * Add into a measurement info in place
     */
@@ -27,6 +29,8 @@ struct measurement_info {
         this->host_fp          += other.host_fp;
         this->device_global_fp += other.device_global_fp;
         this->device_local_fp  += other.device_local_fp;
+        this->dtoh_time        += other.dtoh_time;
+        this->htod_time        += other.htod_time;
 
         return *this;
     }
@@ -43,6 +47,8 @@ struct measurement_info {
         this->host_fp          /= sc;
         this->device_global_fp /= sc;
         this->device_local_fp  /= sc;
+        this->dtoh_time        /= sc;
+        this->htod_time        /= sc;
         
         return *this;
     }

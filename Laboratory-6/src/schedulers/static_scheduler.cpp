@@ -5,8 +5,8 @@
 
 #include <plot_hist.hpp>
 
-StaticScheduler::StaticScheduler(const WorkerSetupFn &_wfn, const std::vector<double> &distr)
-	: Scheduler(_wfn)
+StaticScheduler::StaticScheduler(const WorkerSetupFn &_wfn, const std::vector<double> &distr, std::set<unsigned int> selection)
+	: Scheduler(_wfn, selection)
 {
 	// compute total
 	double total = 0.0;

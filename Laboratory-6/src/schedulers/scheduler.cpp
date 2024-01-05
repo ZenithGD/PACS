@@ -29,6 +29,8 @@ Scheduler::Scheduler(const WorkerSetupFn &_wfn, std::set<unsigned int> selection
     cl_error(err, "Error: Failed to Scan for Platforms IDs");
     printf("Number of available platforms: %d\n\n", n_platforms);
 
+    unsigned int idx = 0;
+
     // 2. Setup context and queues per device
     for (int i = 0; i < n_platforms; i++)
     {
@@ -44,9 +46,9 @@ Scheduler::Scheduler(const WorkerSetupFn &_wfn, std::set<unsigned int> selection
         std::cout << "Created context with id " << context << " for platform " << i << std::endl;
         _contexts.push_back(context);
 
-        for (int j = 0; j < n_devices[i]; j++)
+        for (int j = 0; j < n_devices[i]; j++, idx++)
         {
-            if (!selection.empty() && selection.find(i * n_platforms + j) == selection.end())
+            if (!selection.empty() && selection.find(idx) == selection.end())
             {
                 continue;
             }
@@ -68,7 +70,7 @@ Scheduler::Scheduler(const WorkerSetupFn &_wfn, std::set<unsigned int> selection
             std::string tname(name_buffer);
 
             std::replace(tname.begin(), tname.end(), ' ', '_');
-            auto w = _wfn(i * n_platforms + j)(
+            auto w = _wfn(idx)(
                 tname,
                 platforms_ids[i],
                 devices_ids[i][j],

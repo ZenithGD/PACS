@@ -1,0 +1,13 @@
+total time (ms):1915.1456
+Device NVIDIA_GeForce_MX130
+Program execution time : 1911 milliseconds.
+Kernel execution time: 3.675 milliseconds.
+Bandwidth: 
+  Host to device: 4784645.9 KiB/s.
+  Device to host: 816.44023 KiB/s.
+Throughput: 272.1 tasks/s
+Memory footprint 
+  Host: 17581.125 KiB.
+  Device:
+    Global: 17581.125 KiB.
+    Local: 768 KiB.

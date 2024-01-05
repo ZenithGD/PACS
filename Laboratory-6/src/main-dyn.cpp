@@ -71,7 +71,8 @@ int main(int argc, char **argv)
 
     DynamicScheduler sched(
         worker_setup,
-        args.step);
+        args.step,
+        {});
 
     auto prog_ini = std::chrono::steady_clock().now();
 

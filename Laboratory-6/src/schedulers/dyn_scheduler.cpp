@@ -5,8 +5,8 @@
 
 #include <plot_hist.hpp>
 
-DynamicScheduler::DynamicScheduler(const WorkerSetupFn &_wfn, const unsigned int step)
-    : Scheduler(_wfn), _step(step), _distr(_workers.size())
+DynamicScheduler::DynamicScheduler(const WorkerSetupFn &_wfn, const unsigned int step, std::set<unsigned int> selection)
+    : Scheduler(_wfn, selection), _step(step), _distr(_workers.size())
 {
     // Initial uniform distribution
     std::vector<double> dist_snapshot;
@@ -25,7 +25,8 @@ DynamicScheduler::DynamicScheduler(const WorkerSetupFn &_wfn, const unsigned int
 std::vector<measurement_info> DynamicScheduler::run(CImg<unsigned char> &img, unsigned int reps, bool store)
 {
     std::vector<measurement_info> total_iv(_workers.size());
-    for (unsigned int s = 0; s < reps; s += _step)
+    unsigned int iter = 0;
+    for (unsigned int s = 0; s < reps; s += _step, iter++)
     {
         std::vector<measurement_info> iv(_workers.size());
 
@@ -83,6 +84,14 @@ std::vector<measurement_info> DynamicScheduler::run(CImg<unsigned char> &img, un
         _balance_ev.push_back(dist_snapshot);
     }
 
+    for ( auto& m : total_iv ) {
+        // save total time
+        double tt = m.total_time;
+        // average
+        m /= iter;
+        m.total_time = tt;
+    }
+
     return total_iv;
 }
 
@@ -91,6 +100,8 @@ void DynamicScheduler::run_subrange(CImg<unsigned char> &img, unsigned int idx, 
 	auto prog_ini = std::chrono::steady_clock().now();
 
 	_workers[idx]->setup(img);
+
+    info = measurement_info{};
 
 	for (unsigned int i = lo; i < hi; i++)
 	{

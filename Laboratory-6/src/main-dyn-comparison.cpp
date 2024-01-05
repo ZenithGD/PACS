@@ -62,6 +62,46 @@ WorkerFn worker_setup(unsigned int idx) {
     }
 }
 
+void run_experiment(const Arguments& args, CImg<unsigned char>& img, std::set<unsigned int> selection = {})
+{
+
+    DynamicScheduler sched(
+        worker_setup,
+        args.step,
+        selection);
+
+    double dyn_avg = 0.0;
+    std::vector<measurement_info> iv_avg(sched.get_workers().size());
+
+    for ( unsigned int i = 0; i < args.reps; i++ ) {
+        auto prog_ini = std::chrono::steady_clock().now();
+        // set display to true to store a result from each device
+        auto iv = sched.run(img, args.repl, false);
+        auto prog_end = std::chrono::steady_clock().now();
+        // execution time of the whole program
+        double total_nano = std::chrono::duration_cast<std::chrono::nanoseconds>(prog_end - prog_ini).count();
+        dyn_avg += total_nano / 1e6;
+        std::cout << "total time (ms):" << total_nano / 1e6 << std::endl;
+        
+        for ( unsigned int j = 0; j < iv.size(); j++ ) {
+            iv_avg[j] += iv[j];
+        }
+    }
+    dyn_avg /= args.reps;
+    for ( unsigned int j = 0; j < iv_avg.size(); j++ ) {
+        iv_avg[j] /= args.reps;
+
+        std::cout << "Device " << sched.get_workers()[j]->get_name() << std::endl;
+        std::cout << iv_avg[j] << std::endl;
+    }
+
+    for ( unsigned int j = 0; j < iv_avg.size(); j++ ) {
+        // imbalance
+        double imb = (dyn_avg - iv_avg[j].total_time) / dyn_avg;
+        std::cout << "Imbalance " << sched.get_workers()[j]->get_name() << ": " << imb << std::endl;
+    }
+}
+
 int main(int argc, char **argv)
 {
 
@@ -70,39 +110,12 @@ int main(int argc, char **argv)
 
     std::vector<std::vector<double>> exec_info;
 
-    DynamicScheduler sched(
-        worker_setup,
-        args.step);
+    // both
+    run_experiment(args, img);
 
-    auto prog_ini = std::chrono::steady_clock().now();
+    // cpu only
+    run_experiment(args, img, {0});
 
-    // set display to true to store a result from each device
-    auto iv = sched.run(img, args.repl, false);
-    auto prog_end = std::chrono::steady_clock().now();
-    // execution time of the whole program
-    double total_nano = std::chrono::duration_cast<std::chrono::nanoseconds>(prog_end - prog_ini).count();
-
-    std::cout << "total time (ms):" << total_nano / 1e6 << std::endl;
-
-    // write csv to file
-    std::ostringstream os;
-    os << "dyn-distr-" << args.repl << "-" << args.step << ".csv";
-    std::ofstream out(os.str());
-    if ( !out.is_open() ) {
-        std::cout << "Can't open output csv!" << std::endl;
-        exit(1);
-    }
-    out << "imgs;";
-    for ( int i = 0; i < sched.get_workers().size(); i++ ) {
-        out << sched.get_workers()[i]->get_name() << ";";
-    }
-    out <<"total" << std::endl;
-    int i = 0;
-    for ( auto& snapshot : sched.get_dist_snapshots() ) {
-        out << std::min(i++ * args.step, args.repl) << ";";
-        for ( auto& p : snapshot ) {
-            out << p << ";";
-        }
-        out << std::endl;
-    }
+    // gpu only
+    run_experiment(args, img, {1});
 }

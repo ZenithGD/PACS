@@ -1,0 +1,30 @@
+New distribution: 
+Intel(R)_UHD_Graphics_620_[0x3ea0]: 0.28178
+NVIDIA_GeForce_MX130: 0.71822
+total time (ms):1414.39
+Device Intel(R)_UHD_Graphics_620_[0x3ea0]
+Program execution time : 1491 milliseconds.
+Kernel execution time: 10.59 milliseconds.
+Bandwidth: 
+  Host to device: 1694099.9 KiB/s.
+  Device to host: 289.07704 KiB/s.
+Throughput: 96.36 tasks/s
+Memory footprint 
+  Host: 17581.125 KiB.
+  Device:
+    Global: 17581.125 KiB.
+    Local: 768 KiB.
+Device NVIDIA_GeForce_MX130
+Program execution time : 1423 milliseconds.
+Kernel execution time: 3.676 milliseconds.
+Bandwidth: 
+  Host to device: 4782063.6 KiB/s.
+  Device to host: 815.99959 KiB/s.
+Throughput: 272 tasks/s
+Memory footprint 
+  Host: 17581.125 KiB.
+  Device:
+    Global: 17581.125 KiB.
+    Local: 768 KiB.
+Imbalance Intel(R)_UHD_Graphics_620_[0x3ea0]: 0.024877304
+Imbalance NVIDIA_GeForce_MX130: 0.068972121

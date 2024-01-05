@@ -72,7 +72,8 @@ int main(int argc, char** argv) {
         std::vector<double> dist = { pr, 1 - pr };
         StaticScheduler sched(
             worker_setup, 
-            dist);
+            dist,
+            {});
 
         if ( i == 0 ) {
             for ( auto& w : sched.get_workers() ) {

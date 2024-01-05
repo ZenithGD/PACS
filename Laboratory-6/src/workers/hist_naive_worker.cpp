@@ -39,6 +39,18 @@ void NaiveHist::setup(CImg<unsigned char> &img)
     cl_error(err, "Failed to enqueue a write command\n");
 }
 
+double get_time(cl_event event) {
+    cl_ulong time_start;
+    cl_ulong time_end;
+    clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_START, sizeof(time_start),
+                            &time_start, NULL);
+    clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END, sizeof(time_end), &time_end,
+                            NULL);
+    double kernel_nano = time_end - time_start;
+
+    return kernel_nano;
+}
+
 measurement_info NaiveHist::run()
 {
     int err;
@@ -76,15 +88,20 @@ measurement_info NaiveHist::run()
 
     // round up to nearest multiple of csize
     size_t global_size[1] = {_height * _width + _csize - _height * _width % _csize};
+    
     err = clEnqueueNDRangeKernel(_cmd_queue, _kernel, 1, NULL, global_size, local_size, 0, NULL, &event);
     cl_error(err, "Failed to launch kernel to the device\n");
 
-    err = clEnqueueReadBuffer(_cmd_queue, _r_in_out, CL_TRUE, 0, sizeof(int) * 256, _r, 0, NULL, NULL);
+    double dtoh_time = 0.0;
+    err = clEnqueueReadBuffer(_cmd_queue, _r_in_out, CL_TRUE, 0, sizeof(int) * 256, _r, 0, NULL, &event);
     cl_error(err, "Failed to enqueue  R a read command\n");
-    err = clEnqueueReadBuffer(_cmd_queue, _g_in_out, CL_TRUE, 0, sizeof(int) * 256, _g, 0, NULL, NULL);
+    dtoh_time += get_time(event);
+    err = clEnqueueReadBuffer(_cmd_queue, _g_in_out, CL_TRUE, 0, sizeof(int) * 256, _g, 0, NULL, &event);
     cl_error(err, "Failed to enqueue G a read command\n");
-    err = clEnqueueReadBuffer(_cmd_queue, _b_in_out, CL_TRUE, 0, sizeof(int) * 256, _b, 0, NULL, NULL);
+    dtoh_time += get_time(event);
+    err = clEnqueueReadBuffer(_cmd_queue, _b_in_out, CL_TRUE, 0, sizeof(int) * 256, _b, 0, NULL, &event);
     cl_error(err, "Failed to enqueue B a read command\n");
+    dtoh_time += get_time(event);
 
     // display measurements
 
@@ -122,7 +139,8 @@ measurement_info NaiveHist::run()
         .tasks_per_sec = throughput,
         .host_fp = host_mem / 1024.0,
         .device_global_fp = dev_global_mem / 1024.0,
-        .device_local_fp = dev_local_mem / 1024.0};
+        .device_local_fp = dev_local_mem / 1024.0,
+        .dtoh_time = dtoh_time};
 }
 
 void NaiveHist::release()

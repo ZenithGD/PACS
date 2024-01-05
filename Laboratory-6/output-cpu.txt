@@ -1,0 +1,13 @@
+total time (ms):4332.9834
+Device Intel(R)_UHD_Graphics_620_[0x3ea0]
+Program execution time : 4329 milliseconds.
+Kernel execution time: 8.194 milliseconds.
+Bandwidth: 
+  Host to device: 2149737.9 KiB/s.
+  Device to host: 366.826 KiB/s.
+Throughput: 122.3 tasks/s
+Memory footprint 
+  Host: 17581.125 KiB.
+  Device:
+    Global: 17581.125 KiB.
+    Local: 768 KiB.

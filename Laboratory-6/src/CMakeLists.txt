@@ -6,6 +6,10 @@ add_executable(main-dyn
     main-dyn.cpp
 )
 
+add_executable(main-dyn-comp
+    main-dyn-comparison.cpp
+)
+
 add_library(schedule
     schedulers/scheduler.cpp
     schedulers/static_scheduler.cpp
@@ -59,9 +63,24 @@ target_include_directories(main-dyn
     PRIVATE ${X11_INCLUDE_DIR}
     PRIVATE ${OpenCL_INCLUDE_DIRS})
 
+
+target_link_libraries(main-dyn-comp
+    PRIVATE ${OpenCL_LIBRARIES}
+    PRIVATE ${JPEG_LIBRARIES}
+    PRIVATE ${X11_LIBRARIES}
+    PRIVATE schedule)
+
+target_include_directories(main-dyn-comp
+    PRIVATE ${PROJECT_SOURCE_DIR}/src
+    PRIVATE ${PROJECT_SOURCE_DIR}/CImg
+    PRIVATE ${JPEG_INCLUDE_DIRS}
+    PRIVATE ${X11_INCLUDE_DIR}
+    PRIVATE ${OpenCL_INCLUDE_DIRS})
+
 install(
     TARGETS 
         main-static-naive
         main-dyn
+        main-dyn-comp
     DESTINATION 
         bin)
