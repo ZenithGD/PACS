@@ -53,11 +53,11 @@ Arguments parse_args(int argc, char **argv)
 WorkerFn worker_setup(unsigned int idx) {
     switch ( idx ) {
         case 0:
-            return kernel_fn<NaiveRot>;
+            return kernel_fn<NaiveHist>;
         case 1:
-            return kernel_fn<NaiveRot>;
+            return kernel_fn<NaiveHist>;
         default:
-            return kernel_fn<NaiveRot>;
+            return kernel_fn<NaiveHist>;
     }
 }
 
@@ -81,6 +81,10 @@ int main(int argc, char **argv)
     auto prog_end = std::chrono::steady_clock().now();
     // execution time of the whole program
     double total_nano = std::chrono::duration_cast<std::chrono::nanoseconds>(prog_end - prog_ini).count();
+
+    for ( unsigned int i = 0; i < iv.size(); i++ ) {
+        std::cout << iv[i] << std::endl;
+    }
 
     std::cout << "total time (ms):" << total_nano / 1e6 << std::endl;
 

@@ -24,6 +24,18 @@ void NaiveRot::setup(CImg<unsigned char> &img)
     cl_error(err, "Failed to enqueue a write command\n");
 }
 
+inline double get_time(cl_event event) {
+    cl_ulong time_start;
+    cl_ulong time_end;
+    clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_START, sizeof(time_start),
+                            &time_start, NULL);
+    clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END, sizeof(time_end), &time_end,
+                            NULL);
+    double kernel_nano = time_end - time_start;
+
+    return kernel_nano;
+}
+
 measurement_info NaiveRot::run()
 {
     float degrees = 45;
@@ -58,6 +70,7 @@ measurement_info NaiveRot::run()
 
   err = clEnqueueReadBuffer(_cmd_queue, _out_device_object, CL_TRUE, 0, sizeof(unsigned char) * _height * _width * 3, _img_out, 0, NULL, NULL);
   cl_error(err, "Failed to enqueue a read command\n");
+  double dtoh_time = get_time(event);
     // display measurements
 
     // kernel execution time
@@ -91,7 +104,8 @@ measurement_info NaiveRot::run()
         .tasks_per_sec = throughput,
         .host_fp = host_mem / 1024.0,
         .device_global_fp = dev_global_mem / 1024.0,
-        .device_local_fp = dev_local_mem / 1024.0};
+        .device_local_fp = dev_local_mem / 1024.0,
+        .dtoh_time = dtoh_time / 1000000.0};
 }
 
 void NaiveRot::release()

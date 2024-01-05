@@ -6,6 +6,9 @@
 std::ostream& operator<<(std::ostream& os, const measurement_info& info) {
     os << std::setprecision(4) << "Program execution time : " << info.total_time << " milliseconds." << std::endl;
     os << std::setprecision(4) << "Kernel execution time: " << info.kernel_time << " milliseconds." << std::endl;
+    os << "Comm. time:" << std::endl;
+    os << std::setprecision(8) << "  Host to device: " << info.htod_time << " ms." << std::endl;
+    os << std::setprecision(8) << "  Device to host: " << info.dtoh_time << " ms." << std::endl;
     os << "Bandwidth: " << std::endl;
     os << std::setprecision(8) << "  Host to device: " << info.htod_bw << " KiB/s." << std::endl;
     os << std::setprecision(8) << "  Device to host: " << info.dtoh_bw << " KiB/s." << std::endl;

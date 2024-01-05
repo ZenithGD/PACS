@@ -39,7 +39,7 @@ void NaiveHist::setup(CImg<unsigned char> &img)
     cl_error(err, "Failed to enqueue a write command\n");
 }
 
-double get_time(cl_event event) {
+inline double get_time(cl_event event) {
     cl_ulong time_start;
     cl_ulong time_end;
     clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_START, sizeof(time_start),
@@ -140,7 +140,7 @@ measurement_info NaiveHist::run()
         .host_fp = host_mem / 1024.0,
         .device_global_fp = dev_global_mem / 1024.0,
         .device_local_fp = dev_local_mem / 1024.0,
-        .dtoh_time = dtoh_time};
+        .dtoh_time = dtoh_time / 1000000.0};
 }
 
 void NaiveHist::release()
