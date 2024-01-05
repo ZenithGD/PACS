@@ -1,5 +1,6 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
 
 import os, sys
 
@@ -26,7 +27,7 @@ print(gpu_data)
 # Create a plot with dashed lines
 plt.plot(labels, gpu_data, color='red', linestyle='--', label="GPU")
 plt.plot(labels, cpu_data, color='blue', linestyle='--', label="CPU")
-plt.plot(labels, total_data, color='green', label="CPU")
+plt.plot(labels, total_data, color='green', label="Total")
 
 # Set labels and title
 plt.xlabel('Proportion')
@@ -44,3 +45,22 @@ base_filename, _ = os.path.splitext(csv_file)
 
 # Save the plot as a PNG file with the same base filename
 plt.savefig(base_filename + '.png')
+
+plt.figure()
+# imbalance of the gpu
+
+imb = (total_data - np.minimum(gpu_data, cpu_data)) / total_data
+plt.plot(labels, imb, color='red', linestyle='--')
+
+# Set labels and title
+plt.xlabel('Proportion')
+plt.ylabel('Imbalance')
+plt.title('Static Scheduling Imbalance')
+
+# Set the x-axis range from 0 to 1
+plt.xlim(0, 1)
+
+
+# Save the plot as a PNG file with the same base filename
+plt.savefig(base_filename + '-imb.png')
+
